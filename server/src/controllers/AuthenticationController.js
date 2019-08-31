@@ -4,27 +4,13 @@ const db = require('../dbQueries');
 
 
 
+
 module.exports = {
-    register(req, res) {
-        const { userId } = req.session;
-
-
-        console.log(req.session)
-
-
-        Register.register(req);
+    async register(req, res) {
+        Register.register(req, res);
     },
 
-    login(req, res) {
-
-        const { userId } = req.session;
-
-
-        Login.login(req, res);
-
-
-
+    async login(req, res) {
+        Login.login(req, res)
     }
-
-
 }

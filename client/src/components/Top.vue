@@ -4,23 +4,33 @@
       <img src="../pics/logo.png" height="50" width="50" /> EzGains Exchange
     </div>
 
-    <p>
-      <router-link to="trade">
-        <p>asd</p>
-      </router-link>
-    </p>
+    <div id="button-holder">
+      <div class="buttons" v-if="!$store.state.isUserLoggedIn">
+        <div>
+          <router-link to="register">
+            <button>Create Account</button>
+          </router-link>
+        </div>
 
-    <div id="buttons">
-      <div id="register">
-        <router-link to="register">
-          <button>Create Account</button>
-        </router-link>
+        <div>
+          <router-link to="/">
+            <button>Log in</button>
+          </router-link>
+        </div>
       </div>
 
-      <div id="login">
-        <router-link to="/">
-          <button>Log in</button>
-        </router-link>
+      <div class="buttons" v-if="$store.state.isUserLoggedIn">
+        <div>
+          <router-link to="trade">
+            <button>Trade</button>
+          </router-link>
+        </div>
+
+        <div>
+          <router-link to="account">
+            <button>Account</button>
+          </router-link>
+        </div>
       </div>
     </div>
   </div>
@@ -42,9 +52,11 @@ export default {
 
 <style scoped lang="scss">
 #top {
-  background: #293841;
+  background: #1b2931;
   color: white;
   min-width: 700px;
+  width: 100vw;
+  margin-left: -8px;
 
   display: flex;
   justify-content: space-around;
@@ -59,7 +71,7 @@ export default {
     color: inherit;
   }
 
-  #buttons {
+  .buttons {
     display: flex;
     justify-content: space-around;
     width: 450px;
@@ -77,6 +89,12 @@ export default {
         border: 3px solid rgb(148, 250, 148);
       }
     }
+  }
+}
+
+@media (max-width: 807px) {
+  #top {
+    width: 807px;
   }
 }
 </style>

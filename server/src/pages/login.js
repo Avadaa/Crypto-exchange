@@ -1,7 +1,19 @@
 const db = require('../dbQueries');
 
+
+
 const bcrypt = require('bcryptjs');
 
+const jwt = require('jsonwebtoken');
+const cookiesConfig = require('../../config/cookies');
+
+function jwtSignUser(user) {
+
+    return jwt.sign(user, cookiesConfig.secret, {
+        expiresIn: cookiesConfig.maxAge
+    })
+
+}
 
 module.exports = {
     async login(req, res) {
@@ -30,9 +42,16 @@ module.exports = {
                     else {
                         req.session.userId = dbRes[0].id;
 
-                        //return res.redirect('/trade');
-                        console.log(req.session.userId);
-                        return req.session.userId;
+                        let user = {
+                            userId: req.session.userId
+                        }
+
+
+                        res.send({
+                            user,
+                            token: jwtSignUser(user),
+                            errors: []
+                        })
                     }
 
                 }

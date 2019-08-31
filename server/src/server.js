@@ -7,7 +7,6 @@ const db = require('knex')(require('../config/database'));
 
 // Cookies
 const session = require('express-session');
-const KnexSessionStore = require('connect-session-knex')(session);
 
 // Set Body Parser ready for use
 const bodyParser = require('body-parser');
@@ -24,30 +23,6 @@ const allowCrossDomain = function (req, res, next) {
 }
 
 app.use(allowCrossDomain)
-
-
-// Cookies
-const store = new KnexSessionStore({
-    knex: db,
-    tablename: 'cookies'
-});
-
-
-app.use(session({
-    name: 'sid',
-    store: store,
-    secret: 'benisssloooooool',
-    resave: false,
-    saveUninitialized: false,
-
-
-    cookie: {
-        secure: false,
-        sameSite: true,
-        maxAge: 1000 * 60 * 60 * 6
-    }
-}));
-
 
 
 

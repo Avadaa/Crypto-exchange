@@ -50,31 +50,38 @@ export default {
         password_retype: this.password_retype
       });
 
-      let errorList = res.data.errors;
+      console.log(res.data);
 
-      // Marking error-field borders as red.
-      let names = ["username", "password", "password_retype"];
-      for (let i = 0; i < names.length; i++) {
-        let ele = document.getElementById(names[i]);
+      //Highlight inputs which contain errors
+      if (res.data.errors.length > 0) {
+        let errorList = res.data.errors;
 
-        let hasError = false;
+        let names = ["username", "password", "password_retype"];
+        for (let i = 0; i < names.length; i++) {
+          let ele = document.getElementById(names[i]);
 
-        for (let j = 0; j < errorList.length; j++)
-          if (errorList[j][1] == i) hasError = true;
+          let hasError = false;
 
-        if (hasError)
-          if (!ele.classList.contains("redBorder"))
-            ele.classList.toggle("redBorder");
+          for (let j = 0; j < errorList.length; j++)
+            if (errorList[j][1] == i) hasError = true;
 
-        if (!hasError)
-          if (ele.classList.contains("redBorder"))
-            ele.classList.toggle("redBorder");
+          if (hasError)
+            if (!ele.classList.contains("redBorder"))
+              ele.classList.toggle("redBorder");
+
+          if (!hasError)
+            if (ele.classList.contains("redBorder"))
+              ele.classList.toggle("redBorder");
+        }
+
+        for (let i = 0; i < errorList.length; i++)
+          this.errors.push(errorList[i][0]);
+
+        document.getElementById("error-ul").innerHTML = "";
+      } else {
+        this.$store.dispatch("setToken", res.data.token);
+        this.$store.dispatch("setUser", res.data.user);
       }
-
-      for (let i = 0; i < errorList.length; i++)
-        this.errors.push(errorList[i][0]);
-
-      document.getElementById("error-ul").innerHTML = "";
     }
   }
 };

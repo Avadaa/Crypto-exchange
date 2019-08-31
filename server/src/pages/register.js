@@ -5,9 +5,19 @@ const ethereum = require('../Ethereum/ethereum');
 const bcrypt = require('bcryptjs');
 const bcryptSaltRounds = 10;
 
+const jwt = require('jsonwebtoken');
+const cookiesConfig = require('../../config/cookies');
+
+function jwtSignUser(user) {
+
+    return jwt.sign(user, cookiesConfig.secret, {
+        expiresIn: cookiesConfig.maxAge
+    })
+
+}
 
 module.exports = {
-    register(req) {
+    register(req, res) {
         bcrypt.hash(req.body.password, bcryptSaltRounds, async (err, hash) => {
             if (err) console.log(err);
             else {
@@ -27,7 +37,17 @@ module.exports = {
                 let regQueryWalletInfo = `INSERT INTO wallets("userId", "wallet") VALUES('${userId}', '${JSON.stringify(wallet)}')`;
 
                 await db.query(regQueryWalletInfo);
-                //return res.redirect('/trade');
+
+                let user = {
+                    userId: userId
+                }
+
+
+                res.send({
+                    user,
+                    token: jwtSignUser(user),
+                    errors: []
+                })
 
             }
         });
