@@ -19,7 +19,7 @@
 
 <script>
 import auth from "../../../services/AuthenticationService.js";
-import Router from "../../../router/index";
+import router from "../../../router/index";
 
 export default {
   name: "login",
@@ -46,7 +46,7 @@ export default {
       else {
         this.$store.dispatch("setToken", res.data.token);
         this.$store.dispatch("setUser", res.data.user);
-        Router.push("trade");
+        router.push("trade");
       }
     }
   }

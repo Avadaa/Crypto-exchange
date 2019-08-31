@@ -7,13 +7,20 @@
 
 <script>
 import Top from "./components/Top.vue";
+import router from "./router/index";
 
 export default {
   name: "App",
   components: {
     Top
   },
-  methods: {}
+  methods: {},
+  mounted() {
+    if (this.$store.state.isUserLoggedIn) router.push("trade");
+  },
+  created() {
+    this.$store.dispatch("getLocalToken");
+  }
 };
 </script>
 
