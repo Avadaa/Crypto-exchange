@@ -4,22 +4,22 @@
       <img src="../pics/logo.png" height="50" width="50" /> EzGains Exchange
     </div>
 
+    <p>
+      <router-link to="trade">
+        <p>asd</p>
+      </router-link>
+    </p>
+
     <div id="buttons">
       <div id="register">
         <router-link to="register">
-          <button
-            @mouseenter="e => e.target.classList.toggle('largerBorder')"
-            @mouseleave="e => e.target.classList.toggle('largerBorder')"
-          >Create Account</button>
+          <button>Create Account</button>
         </router-link>
       </div>
 
       <div id="login">
         <router-link to="/">
-          <button
-            @mouseenter="e => e.target.classList.toggle('largerBorder')"
-            @mouseleave="e => e.target.classList.toggle('largerBorder')"
-          >Log in</button>
+          <button>Log in</button>
         </router-link>
       </div>
     </div>
@@ -72,9 +72,10 @@ export default {
       width: 200px;
       background: rgb(78, 196, 78);
       border: 1px solid white;
-    }
-    .largerBorder {
-      border: 3px solid rgb(148, 250, 148);
+
+      &:hover {
+        border: 3px solid rgb(148, 250, 148);
+      }
     }
   }
 }

@@ -14,6 +14,7 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
 // CORS middleware
 const allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -24,16 +25,18 @@ const allowCrossDomain = function (req, res, next) {
 
 app.use(allowCrossDomain)
 
+
 // Cookies
 const store = new KnexSessionStore({
     knex: db,
     tablename: 'cookies'
 });
 
+
 app.use(session({
     name: 'sid',
     store: store,
-    secret: 'hunter2',
+    secret: 'benisssloooooool',
     resave: false,
     saveUninitialized: false,
 
@@ -52,6 +55,7 @@ let server = app.listen(process.env.PORT || 3000, () => {
     console.log('server running');
 
 });
+
 
 
 require('./routes')(app)

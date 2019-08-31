@@ -6,14 +6,13 @@
       <br />
       <br />
       <label for="password">Password</label>
-      <input type="password" name="password" v-model="password" />
+      <input type="password" name="password" v-model="password" @keyup.enter.native="login" />
       <br />
       <br />
-      <button
-        v-on:click="login();"
-        @mouseenter="e => e.target.classList.toggle('largerBorder')"
-        @mouseleave="e => e.target.classList.toggle('largerBorder')"
-      >Log in</button>
+      <ul id="error-ul">
+        <li v-if="error.length > 0">{{error}}</li>
+      </ul>
+      <button v-on:click="login();" id="login-button">Log in</button>
     </div>
   </div>
 </template>
@@ -27,7 +26,8 @@ export default {
   data() {
     return {
       username: "",
-      password: ""
+      password: "",
+      error: []
     };
   },
 
@@ -39,6 +39,8 @@ export default {
         username: this.username,
         password: this.password
       });
+
+      if (res.data.errors.length > 0) this.error = res.data.errors[0];
     }
   }
 };
@@ -68,6 +70,11 @@ export default {
 
     padding: 5px;
   }
+
+  li {
+    list-style: none;
+    color: rgb(255, 196, 196);
+  }
   button {
     font-size: 30px;
     color: rgb(255, 255, 255);
@@ -76,9 +83,10 @@ export default {
     width: 100px;
     background: rgb(78, 196, 78);
     border: 1px solid white;
-  }
-  .largerBorder {
-    border: 3px solid rgb(148, 250, 148);
+
+    &:hover {
+      border: 3px solid rgb(148, 250, 148);
+    }
   }
 }
 </style>
