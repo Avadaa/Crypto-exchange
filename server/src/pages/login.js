@@ -40,10 +40,9 @@ module.exports = {
                     if (err) throw err;
 
                     else {
-                        req.session.userId = dbRes[0].id;
 
                         let user = {
-                            userId: req.session.userId
+                            userId: dbRes[0].id;
                         }
 
 

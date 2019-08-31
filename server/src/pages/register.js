@@ -28,7 +28,6 @@ module.exports = {
 
                 let dbResInsertUserInfo = await db.query(regQueryUserInfo);
                 let userId = dbResInsertUserInfo[0].id;
-                req.session.userId = userId;
 
 
 
