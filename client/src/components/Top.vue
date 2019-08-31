@@ -1,0 +1,64 @@
+<template>
+  <div id="top">
+    <div style="display: flex; align-items: center;">
+      <img src="../pics/logo.png" height="50" width="50" /> EzGains Exchange
+    </div>
+
+    <div id="register">
+      <router-link to="register">
+        <button
+          @mouseenter="e => e.target.classList.toggle('largerBorder')"
+          @mouseleave="e => e.target.classList.toggle('largerBorder')"
+        >Create Account</button>
+      </router-link>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "top",
+  components: {},
+  data() {
+    return {};
+  },
+
+  created: function() {},
+
+  methods: {}
+};
+</script>
+
+<style scoped lang="scss">
+#top {
+  background: #293841;
+  color: white;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  img {
+    margin-right: 10px;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  button {
+    font-size: 20px;
+    color: rgb(255, 255, 255);
+
+    height: 50px;
+    width: 200px;
+    background: rgb(78, 196, 78);
+    border: 1px solid white;
+  }
+
+  .largerBorder {
+    border: 3px solid rgb(148, 250, 148);
+  }
+}
+</style>
