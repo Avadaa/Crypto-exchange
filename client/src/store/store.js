@@ -33,7 +33,13 @@ export default new Vuex.Store({
             commit('setToken', localStorage.getItem('token'));
         },
         setUser({ commit }, User) {
+            localStorage.setItem('user', User);
+
             commit('setUser', User);
+        },
+        getLocalUser({ commit }) {
+            commit('setUser', localStorage.getItem('user'));
+
         }
     },
     getters: {

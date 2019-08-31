@@ -20,6 +20,7 @@ export default {
   },
   created() {
     this.$store.dispatch("getLocalToken");
+    this.$store.dispatch("getLocalUser");
   }
 };
 </script>
