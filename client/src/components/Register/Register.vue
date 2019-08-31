@@ -28,6 +28,7 @@
 
 <script>
 import auth from "../../services/AuthenticationService.js";
+import router from "../../router/index";
 
 export default {
   name: "Register",
@@ -81,6 +82,7 @@ export default {
       } else {
         this.$store.dispatch("setToken", res.data.token);
         this.$store.dispatch("setUser", res.data.user);
+        router.push("trade");
       }
     }
   }

@@ -31,6 +31,11 @@ export default new Vuex.Store({
         setUser({ commit }, User) {
             commit('setUser', User);
         }
+    },
+    getters: {
+        isUserLoggedIn: (state) => {
+            return state.isUserLoggedIn;
+        }
     }
 
 })

@@ -42,7 +42,7 @@ module.exports = {
                     else {
 
                         let user = {
-                            userId: dbRes[0].id;
+                            userId: dbRes[0].id
                         }
 
 

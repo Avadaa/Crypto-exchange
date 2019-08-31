@@ -4,24 +4,69 @@ import Front_page from '@/components/Front_page/Front_page.vue'
 import Register from '@/components/Register/Register.vue'
 import Trade from '@/components/Trade/Trade.vue'
 
-Vue.use(Router)
+const store = require('../store/store');
+
+Vue.use(Router);
 
 export default new Router({
   routes: [
     {
       path: '/',
       name: 'Front_page',
-      component: Front_page
+      component: Front_page,
+      beforeEnter(to, from, next) {
+        let logged = store.default.getters.isUserLoggedIn;
+        if (logged) {
+          next('trade')
+        }
+        else {
+          next()
+        }
+      }
     },
     {
       path: '/register',
       name: 'Register',
-      component: Register
+      component: Register,
+      beforeEnter(to, from, next) {
+        let logged = store.default.getters.isUserLoggedIn;
+        if (logged) {
+          next('trade')
+        }
+        else {
+          next()
+        }
+      }
     },
     {
       path: '/trade',
       name: 'Trade',
-      component: Trade
+      component: Trade,
+      beforeEnter(to, from, next) {
+        let logged = store.default.getters.isUserLoggedIn;
+        if (!logged) {
+          next('/')
+        }
+        else {
+          next()
+        }
+      }
     },
+    /*
+    {
+      path: '/account',
+      name: 'Account',
+      component: Account,
+      beforeEnter(to, from, next) {
+        let logged = store.default.getters.isUserLoggedIn;
+        if (!logged) {
+          next('/')
+        }
+        else {
+          next()
+        }
+      }
+    }
+    */
   ]
 })
