@@ -1,0 +1,11 @@
+{
+  "name": "crypto-exchange",
+  "version": "1.0.0",
+  "description": "An exchange where users can trade cryptocurrencies with each others. Capable of working with real money.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joona Antila",
+  "license": "ISC"
+}
