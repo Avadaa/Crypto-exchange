@@ -3,7 +3,7 @@ const app = express();
 const path = require('path');
 
 // Setting up db
-const db = require('knex')(require('./config/database'));
+const db = require('knex')(require('../config/database'));
 
 // Cookies
 const session = require('express-session');
@@ -54,12 +54,7 @@ let server = app.listen(process.env.PORT || 3000, () => {
 });
 
 
-app.post('/register', (req, res) => {
-    console.log(req.body.email)
-    res.send({
-        msg: `${req.body.email}`
-    })
-})
+require('./routes')(app)
 
 // Exporting the server-object for Socket.IO usage in trading-file
 module.exports = { server: server };

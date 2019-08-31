@@ -1,4 +1,4 @@
-const db = require('knex')(require('./config/database'));
+const db = require('knex')(require('../config/database'));
 
 module.exports = {
     query: async (query) => {

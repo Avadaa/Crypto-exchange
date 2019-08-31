@@ -1,14 +1,11 @@
 <template>
   <div id="app">
     <Top />
-    <p v-on:click="asd">asd</p>
-
     <router-view />
   </div>
 </template>
 
 <script>
-import auth from "./services/AuthenticationService.js";
 import Top from "./components/Top.vue";
 
 export default {
@@ -16,14 +13,7 @@ export default {
   components: {
     Top
   },
-  methods: {
-    asd: function() {
-      auth.register({
-        email: "2test",
-        password: "hunter"
-      });
-    }
-  }
+  methods: {}
 };
 </script>
 
@@ -43,5 +33,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   margin-top: -10px;
+}
+
+input:focus {
+  outline: none !important;
+}
+button:focus {
+  outline: 0 !important;
 }
 </style>

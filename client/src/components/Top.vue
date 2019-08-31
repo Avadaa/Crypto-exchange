@@ -4,13 +4,24 @@
       <img src="../pics/logo.png" height="50" width="50" /> EzGains Exchange
     </div>
 
-    <div id="register">
-      <router-link to="register">
-        <button
-          @mouseenter="e => e.target.classList.toggle('largerBorder')"
-          @mouseleave="e => e.target.classList.toggle('largerBorder')"
-        >Create Account</button>
-      </router-link>
+    <div id="buttons">
+      <div id="register">
+        <router-link to="register">
+          <button
+            @mouseenter="e => e.target.classList.toggle('largerBorder')"
+            @mouseleave="e => e.target.classList.toggle('largerBorder')"
+          >Create Account</button>
+        </router-link>
+      </div>
+
+      <div id="login">
+        <router-link to="/">
+          <button
+            @mouseenter="e => e.target.classList.toggle('largerBorder')"
+            @mouseleave="e => e.target.classList.toggle('largerBorder')"
+          >Log in</button>
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -33,6 +44,7 @@ export default {
 #top {
   background: #293841;
   color: white;
+  min-width: 700px;
 
   display: flex;
   justify-content: space-around;
@@ -47,18 +59,23 @@ export default {
     color: inherit;
   }
 
-  button {
-    font-size: 20px;
-    color: rgb(255, 255, 255);
+  #buttons {
+    display: flex;
+    justify-content: space-around;
+    width: 450px;
 
-    height: 50px;
-    width: 200px;
-    background: rgb(78, 196, 78);
-    border: 1px solid white;
-  }
+    button {
+      font-size: 20px;
+      color: rgb(255, 255, 255);
 
-  .largerBorder {
-    border: 3px solid rgb(148, 250, 148);
+      height: 50px;
+      width: 200px;
+      background: rgb(78, 196, 78);
+      border: 1px solid white;
+    }
+    .largerBorder {
+      border: 3px solid rgb(148, 250, 148);
+    }
   }
 }
 </style>

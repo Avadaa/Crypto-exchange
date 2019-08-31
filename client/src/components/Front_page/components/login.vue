@@ -1,52 +1,70 @@
 <template>
-  <div>
-    <form method="post" action="/">
+  <div id="login">
+    <div id="form">
       <label for="username">Username</label>
-      <input type="text" name="username" />
+      <input type="text" name="username" v-model="username" autocomplete="off" />
       <br />
       <br />
       <label for="password">Password</label>
-      <input type="password" name="password" />
+      <input type="password" name="password" v-model="password" />
       <br />
       <br />
       <button
-        type="submit"
-        v-on:click="this.form.submit(); this.disabled=true; this.value='Sending...';"
+        v-on:click="login();"
         @mouseenter="e => e.target.classList.toggle('largerBorder')"
         @mouseleave="e => e.target.classList.toggle('largerBorder')"
       >Log in</button>
-    </form>
+    </div>
   </div>
 </template>
 
 <script>
+import auth from "../../../services/AuthenticationService.js";
+
 export default {
   name: "login",
   components: {},
   data() {
     return {
-      //orders: Array,
-      //errors: []
+      username: "",
+      password: ""
     };
   },
 
   created: function() {},
 
-  methods: {}
+  methods: {
+    async login() {
+      const res = await auth.login({
+        username: this.username,
+        password: this.password
+      });
+    }
+  }
 };
 </script>
 
 <style scoped lang="scss">
-form {
+#login {
+  display: flex;
+  justify-content: space-around;
+  min-width: 800px;
+}
+
+#form {
   font-size: 30px;
+  width: 800px;
 
   label {
     margin-right: 10px;
+    float: left;
+    width: 250px;
   }
   input {
     border-radius: 5px;
     border: 0;
     font-size: 30px;
+    float: left;
 
     padding: 5px;
   }
@@ -59,9 +77,8 @@ form {
     background: rgb(78, 196, 78);
     border: 1px solid white;
   }
-}
-
-.largerBorder {
-  border: 3px solid rgb(148, 250, 148);
+  .largerBorder {
+    border: 3px solid rgb(148, 250, 148);
+  }
 }
 </style>
