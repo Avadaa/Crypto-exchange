@@ -19,14 +19,6 @@ export default {
     // Load user info
     this.$store.dispatch("getLocalToken");
     this.$store.dispatch("getLocalUser");
-
-    // Formatting gets all messed up
-    if (
-      this.$store.state.isUserLoggedIn &&
-      this.$store.state.user.userId != null
-    ) {
-      router.push("trade");
-    }
   }
 };
 </script>
@@ -39,6 +31,12 @@ export default {
 
 body {
   background: #2f3d45;
+  min-width: 800px;
+
+  p,
+  label {
+    color: white;
+  }
 }
 
 #app {

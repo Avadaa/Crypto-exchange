@@ -32,8 +32,6 @@ export default {
     };
   },
 
-  created: function() {},
-
   methods: {
     async login() {
       const res = await auth.login({
@@ -48,6 +46,15 @@ export default {
         router.push("trade");
       }
     }
+  },
+
+  created() {
+    if (
+      this.$store.state.isUserLoggedIn &&
+      this.$store.state.user.userId != null
+    ) {
+      router.push("trade");
+    }
   }
 };
 </script>
@@ -56,7 +63,6 @@ export default {
 #login {
   display: flex;
   justify-content: space-around;
-  min-width: 800px;
 }
 
 #form {

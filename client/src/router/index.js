@@ -19,6 +19,7 @@ export default new Router({
         let logged = store.default.getters.isUserLoggedIn;
         if (logged) {
           next('trade')
+          from()
         }
         else {
           next()
@@ -58,6 +59,7 @@ export default new Router({
       path: '/account',
       name: 'Account',
       component: Account,
+
       beforeEnter(to, from, next) {
         let logged = store.default.getters.isUserLoggedIn;
         if (!logged) {
@@ -67,6 +69,7 @@ export default new Router({
           next()
         }
       }
+
     }
 
   ]

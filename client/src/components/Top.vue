@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import router from "../router/index";
+
 export default {
   name: "top",
   components: {},
@@ -72,11 +74,6 @@ export default {
     margin-right: 10px;
   }
 
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
-
   .user {
     font-size: 13px;
     margin: 5px 0;
@@ -85,7 +82,7 @@ export default {
   .buttons {
     display: flex;
     justify-content: space-around;
-    width: 450px;
+    width: 600px;
 
     button {
       font-size: 20px;

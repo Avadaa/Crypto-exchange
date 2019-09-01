@@ -17,11 +17,7 @@
       <ul id="error-ul">
         <li v-for="error in errors">{{error}}</li>
       </ul>
-      <button
-        v-on:click="register();"
-        @mouseenter="e => e.target.classList.toggle('largerBorder')"
-        @mouseleave="e => e.target.classList.toggle('largerBorder')"
-      >Log in</button>
+      <button v-on:click="register();">Register</button>
     </div>
   </div>
 </template>
@@ -85,6 +81,14 @@ export default {
         router.push("trade");
       }
     }
+  },
+  created() {
+    if (
+      this.$store.state.isUserLoggedIn &&
+      this.$store.state.user.userId != null
+    ) {
+      router.push("trade");
+    }
   }
 };
 </script>
@@ -93,7 +97,6 @@ export default {
 #register {
   display: flex;
   justify-content: space-around;
-  min-width: 800px;
 }
 
 #form {
@@ -125,13 +128,13 @@ export default {
     color: rgb(255, 255, 255);
 
     height: 50px;
-    width: 100px;
+    width: 150px;
     background: rgb(78, 196, 78);
     border: 1px solid white;
-  }
 
-  .largerBorder {
-    border: 3px solid rgb(148, 250, 148);
+    &:hover {
+      border: 3px solid rgb(148, 250, 148);
+    }
   }
 
   .redBorder {
