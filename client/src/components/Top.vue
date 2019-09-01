@@ -37,6 +37,10 @@
             <button>Account</button>
           </router-link>
         </div>
+
+        <div>
+          <button id="logout" @click="logout()">Log out</button>
+        </div>
       </div>
     </div>
   </div>
@@ -54,7 +58,14 @@ export default {
 
   created: function() {},
 
-  methods: {}
+  methods: {
+    logout() {
+      this.$store.dispatch("setToken");
+
+      localStorage.clear();
+      this.$router.push("/");
+    }
+  }
 };
 </script>
 
@@ -95,6 +106,16 @@ export default {
 
       &:hover {
         border: 3px solid rgb(148, 250, 148);
+      }
+    }
+
+    #logout {
+      background: rgb(255, 100, 100);
+      height: 50px;
+      width: 100px;
+
+      &:hover {
+        border: 3px solid rgb(255, 134, 134);
       }
     }
   }
