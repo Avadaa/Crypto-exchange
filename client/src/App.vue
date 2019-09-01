@@ -15,12 +15,18 @@ export default {
     Top
   },
   methods: {},
-  mounted() {
-    if (this.$store.state.isUserLoggedIn) router.push("trade");
-  },
   created() {
+    // Load user info
     this.$store.dispatch("getLocalToken");
     this.$store.dispatch("getLocalUser");
+
+    // Formatting gets all messed up
+    if (
+      this.$store.state.isUserLoggedIn &&
+      this.$store.state.user.userId != null
+    ) {
+      router.push("trade");
+    }
   }
 };
 </script>

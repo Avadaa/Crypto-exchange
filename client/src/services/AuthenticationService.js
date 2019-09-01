@@ -7,12 +7,8 @@ export default {
     login(credentials) {
         return Api().post('login', credentials);
 
+    },
+    user(userId) {
+        return Api().post('api/user', userId);
     }
 }
-
-/*
-AuthenticationService.register({
-    email: '2test',
-    password: 'hunter'
-})
-*/

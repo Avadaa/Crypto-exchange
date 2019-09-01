@@ -1,7 +1,13 @@
 <template>
   <div id="top">
     <div style="display: flex; align-items: center;">
-      <img src="../pics/logo.png" height="50" width="50" /> EzGains Exchange
+      <img src="../pics/logo.png" height="50" width="50" />
+      <div v-if="!$store.state.isUserLoggedIn">EzGains Exchange</div>
+      <div v-if="$store.state.isUserLoggedIn">
+        <p class="user">{{$store.state.user.username}}</p>
+        <p class="user">ETH: {{$store.state.user.balanceETH - $store.state.user.reservedETH}}</p>
+        <p class="user">USD: {{$store.state.user.balanceUSD - $store.state.user.reservedUSD}}</p>
+      </div>
     </div>
 
     <div id="button-holder">
@@ -69,6 +75,11 @@ export default {
   a {
     text-decoration: none;
     color: inherit;
+  }
+
+  .user {
+    font-size: 13px;
+    margin: 5px 0;
   }
 
   .buttons {

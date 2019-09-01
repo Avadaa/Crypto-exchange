@@ -38,7 +38,14 @@ module.exports = {
                 await db.query(regQueryWalletInfo);
 
                 let user = {
-                    userId: userId
+                    userId: userId,
+                    username: req.body.username,
+                    address: wallet.address,
+                    balanceETH: 0,
+                    balanceUSD: 0,
+                    reservedETH: 0,
+                    reservedUSD: 0,
+
                 }
 
 

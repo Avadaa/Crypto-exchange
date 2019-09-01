@@ -28,7 +28,7 @@ module.exports = {
             errorMsg.push('Incorrect credentials');
 
         else {
-            await bcrypt.compare(req.body.password, dbRes[0].pwhash, function (err, result) {
+            await bcrypt.compare(req.body.password, dbRes[0].pwhash, async function (err, result) {
 
                 if (result == false)  // Wrong pw
                     res.status(200).send({
@@ -41,10 +41,23 @@ module.exports = {
 
                     else {
 
-                        let user = {
-                            userId: dbRes[0].id
-                        }
 
+
+                        let userInfoQuery = `SELECT * FROM users WHERE id = '${dbRes[0].id}'`;
+                        let userInfo = await db.query(userInfoQuery);
+
+                        let userWalletquery = `SELECT * FROM wallets WHERE "userId" = '${dbRes[0].id}'`;
+                        let userWalletInfo = await db.query(userWalletquery);
+
+                        let user = {
+                            userId: dbRes[0].id,
+                            username: req.body.username,
+                            address: userWalletInfo[0].wallet.address,
+                            balanceETH: userInfo[0].balanceETH,
+                            balanceUSD: userInfo[0].balanceUSD,
+                            reservedETH: userInfo[0].reservedETH,
+                            reservedUSD: userInfo[0].reservedUSD,
+                        }
 
                         res.send({
                             user,

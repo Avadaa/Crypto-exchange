@@ -40,7 +40,6 @@ export default {
         username: this.username,
         password: this.password
       });
-      console.log(res.data);
 
       if (res.data.errors.length > 0) this.error = res.data.errors[0];
       else {

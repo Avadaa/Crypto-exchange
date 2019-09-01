@@ -14,5 +14,7 @@ module.exports = (app) => {
         AuthenticationControllerPolicy.login,
         AuthenticationController.login);
 
+    app.post('/api/user', AuthenticationController.user);
+
 
 }

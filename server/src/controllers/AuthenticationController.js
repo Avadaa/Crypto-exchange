@@ -6,11 +6,23 @@ const db = require('../dbQueries');
 
 
 module.exports = {
-    async register(req, res) {
+    register(req, res) {
         Register.register(req, res);
     },
 
-    async login(req, res) {
+    login(req, res) {
         Login.login(req, res)
+    },
+
+    async user(req, res) {
+        let userInfoQuery = `SELECT * FROM users WHERE id = '${req.body.userId}'`
+        let userWalletInfo = await db.query(userInfoQuery)
+
+        res.send({
+            balanceETH: userWalletInfo[0].balanceETH,
+            balanceUSD: userWalletInfo[0].balanceUSD,
+            reservedETH: userWalletInfo[0].reservedETH,
+            reservedUSD: userWalletInfo[0].reservedUSD,
+        })
     }
 }

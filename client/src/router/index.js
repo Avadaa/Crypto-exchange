@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Front_page from '@/components/Front_page/Front_page.vue'
 import Register from '@/components/Register/Register.vue'
 import Trade from '@/components/Trade/Trade.vue'
+import Account from '@/components/Account/Account.vue'
 
 const store = require('../store/store');
 
@@ -52,7 +53,7 @@ export default new Router({
         }
       }
     },
-    /*
+
     {
       path: '/account',
       name: 'Account',
@@ -67,6 +68,6 @@ export default new Router({
         }
       }
     }
-    */
+
   ]
 })
