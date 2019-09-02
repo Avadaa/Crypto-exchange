@@ -11,6 +11,7 @@
           <a
             id="address"
             v-bind:href="'https://etherscan.io/address/' + this.$store.state.user.address"
+            target="_blank"
           >{{this.$store.state.user.address}}</a>
         </p>
       </div>
@@ -39,6 +40,7 @@ export default {
 #deposit {
   display: flex;
   justify-content: space-around;
+  height: 350px;
   #address {
     width: 500px;
 

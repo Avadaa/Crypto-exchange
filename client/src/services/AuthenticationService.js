@@ -10,5 +10,8 @@ export default {
     },
     user(userId) {
         return Api().post('api/user', userId);
+    },
+    withdraw(withdrawInfo) {
+        return Api().post('eth/withdraw', withdrawInfo);
     }
 }

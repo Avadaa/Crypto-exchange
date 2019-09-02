@@ -86,7 +86,9 @@ export default {
   }
 
   .user {
+    text-align: left;
     font-size: 13px;
+
     margin: 5px 0;
   }
 

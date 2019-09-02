@@ -42,10 +42,32 @@ module.exports = {
 
     },
 
-    login(req, res, next) {
-        ///console.log(req.body)
 
-        next();
+    async withdraw(req, res, next) {
+        let errorMsg = [];
+
+
+        if (!req.body.amount || !req.body.address)
+            errorMsg.push('Please give a destination address and an amount you would wish to withdraw.');
+
+        else {
+            let walletQuery = `SELECT * FROM users WHERE id = '${req.body.userId}'`;
+            let wallet = await db.query(walletQuery);
+
+            let availableETH = wallet[0].balanceETH - wallet[0].reservedETH;
+            if (req.body.amount > availableETH)
+                errorMsg.push('Please give a valid amount');
+
+        }
+
+        if (errorMsg.length == 0)
+            next()
+        else
+            res.status(200).send({
+                messages: errorMsg,
+                success: false
+            });
+
 
     }
 }

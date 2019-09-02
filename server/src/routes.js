@@ -10,11 +10,13 @@ module.exports = (app) => {
         AuthenticationController.register);
 
 
-    app.post('/login',
-        AuthenticationControllerPolicy.login,
-        AuthenticationController.login);
+    app.post('/login', AuthenticationController.login);
 
     app.post('/api/user', AuthenticationController.user);
+
+    app.post('/eth/withdraw',
+        AuthenticationControllerPolicy.withdraw,
+        AuthenticationController.withdraw);
 
 
 }

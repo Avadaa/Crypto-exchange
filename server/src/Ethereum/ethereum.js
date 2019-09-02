@@ -56,11 +56,11 @@ module.exports = {
 
                         await db.query(`INSERT INTO withdraws("userId", "hash", "date", "amount") VALUES('${userId}', '${hash}', '${new Date}', ${amount})`);
 
-                        return '';
+                        return null;
                     }
                     else {
                         console.log(err)
-                        return 'Error occured. Please verify your inputs.';
+                        return 'An error has occured. Please verify your inputs.';
 
                     }
                 });

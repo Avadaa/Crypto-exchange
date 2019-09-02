@@ -6,7 +6,7 @@
       <br />
       <br />
       <label for="password">Password</label>
-      <input type="password" name="password" v-model="password" @keyup.enter.native="login" />
+      <input type="password" name="password" v-model="password" />
       <br />
       <br />
       <ul id="error-ul">
