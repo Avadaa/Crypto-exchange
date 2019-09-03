@@ -121,12 +121,13 @@ module.exports = {
                     }
                     else {
                         console.log(err)
-                        return false;
+                        return err;
                     }
                 });
             }
             catch (error) {
                 console.log("An error occured during a deposit: " + error);
+                return error;
             }
 
         }

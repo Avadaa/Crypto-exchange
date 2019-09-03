@@ -18,5 +18,7 @@ module.exports = (app) => {
         AuthenticationControllerPolicy.withdraw,
         AuthenticationController.withdraw);
 
+    app.post('/eth/deposit', AuthenticationController.deposit);
+
 
 }

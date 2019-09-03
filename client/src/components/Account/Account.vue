@@ -19,7 +19,8 @@ export default {
   name: "Account",
   components: {
     deposit,
-    withdraw
+    withdraw,
+    checkedDeposit: false
   },
   data() {
     return {};
@@ -56,6 +57,20 @@ export default {
         username: this.$store.state.user.username
       });
       this.$store.dispatch("setBalance", userInfo.data);
+    }
+  },
+  async mounted() {
+    if (!this.checkedDeposit) {
+      const res = await auth.deposit({
+        userId: this.$store.state.user.userId
+      });
+
+      if (res.data.success) {
+        delete res.data["success"];
+        this.$store.dispatch("setBalance", res.data);
+      }
+
+      this.checkedDeposit = true;
     }
   }
 };

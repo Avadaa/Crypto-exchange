@@ -13,5 +13,8 @@ export default {
     },
     withdraw(withdrawInfo) {
         return Api().post('eth/withdraw', withdrawInfo);
+    },
+    deposit(userId) {
+        return Api().post('eth/deposit', userId);
     }
 }

@@ -2,7 +2,7 @@
   <div id="withdraw">
     <div id="withdraw-input">
       <div>
-        <p>Available funds to withdraw: {{this.$store.state.user.balanceETH - this.$store.state.user.reservedETH}} ETH</p>
+        <p>Available funds: {{this.$store.state.user.balanceETH - this.$store.state.user.reservedETH}} ETH</p>
         <label for="address">Address</label>
         <input type="text" name="address" v-model="address" autocomplete="off" />
         <br />
@@ -53,11 +53,8 @@ export default {
 
         delete res.data["success"];
         delete res.data["messages"];
-        console.log(res.data);
         this.$store.dispatch("setBalance", res.data);
       }
-
-      console.log(res.data.messages);
     }
   },
   async created() {}
