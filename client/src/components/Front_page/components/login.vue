@@ -1,5 +1,5 @@
 <template>
-  <div id="login">
+  <div id="login" @keyup.enter="login">
     <div id="form">
       <label for="username">Username</label>
       <input type="text" name="username" v-model="username" autocomplete="off" />

@@ -1,6 +1,6 @@
 
 <template>
-  <div id="register">
+  <div id="register" @keyup.enter="register">
     <div id="form">
       <label for="username">Username</label>
       <input type="text" name="username" v-model="username" autocomplete="off" id="username" />
@@ -46,8 +46,6 @@ export default {
         password: this.password,
         password_retype: this.password_retype
       });
-
-      console.log(res.data);
 
       //Highlight inputs which contain errors
       if (res.data.errors.length > 0) {

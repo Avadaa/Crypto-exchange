@@ -23,9 +23,10 @@ module.exports = {
         // To deal with pending transactions, only allow a withdraws every two minutes.
         // Withdraw hash and TIME is inserted into a database table, and the timestamp is fetched every time the function is called.
         let withdraws = await db.query(`SELECT * FROM withdraws WHERE "userId" = '${userId}'`);
-        let timeDifference = withdraws.length > 0 ? new Date() - Date.parse(withdraws[withdraws.length - 1].date) : 120001;
+        let cooldownPlusOne = ethConfig.cooldown + 1;
+        let timeDifference = withdraws.length > 0 ? new Date() - Date.parse(withdraws[withdraws.length - 1].date) : cooldownPlusOne;
 
-        if (timeDifference > 120000) {
+        if (timeDifference > ethConfig.cooldown) {
 
             let amountWei = web3.toWei(amount, 'ether');
             let gasLimit = ethConfig.gasLimit;
@@ -80,9 +81,10 @@ module.exports = {
         // To deal with pending transactions, only allow a deposit every two minutes.
         // Deposit hash and TIME is inserted into a database table, and the timestamp is fetched every time the function is called.
         let deposits = await db.query(`SELECT * FROM deposits WHERE "userId" = '${userId}'`);
-        let timeDifference = deposits.length > 0 ? new Date() - Date.parse(deposits[deposits.length - 1].date) : 120001;
+        let cooldownPlusOne = ethConfig.cooldown + 1;
+        let timeDifference = deposits.length > 0 ? new Date() - Date.parse(deposits[deposits.length - 1].date) : cooldownPlusOne;
 
-        if (timeDifference > 120000) {
+        if (timeDifference > ethConfig.cooldown) {
 
             let balanceWei = web3.toWei(balance, 'ether');
             let gasLimit = ethConfig.gasLimit;
