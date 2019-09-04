@@ -21,7 +21,10 @@
 
       <div id="deposit-table-div">
         <table id="deposit-table">
-          <tr v-for="deposit in depositHistory">
+          <tr
+            v-for="(deposit,index) in depositHistory"
+            :class="[{'title': index === 0}, {'even': index % 2 == 0}]"
+          >
             <td width="300">{{deposit.date}}</td>
             <td width="180">{{deposit.amount}}</td>
           </tr>
@@ -58,16 +61,7 @@ export default {
 
     this.depositHistory = depositHistory.data;
   },
-  mounted() {
-    // Add classes to the table
-    let rows = document.getElementsByTagName("tr");
-
-    setTimeout(() => {
-      rows.item(0).classList.add("title");
-      for (let i = 0; i < rows.length; i++)
-        if (i > 0 && i % 2 == 0) rows.item(i).classList.add("even");
-    }, 400);
-  }
+  mounted() {}
 };
 </script>
 
@@ -98,14 +92,15 @@ export default {
         border-collapse: collapse;
         border: 2px solid #2f3b41;
 
+        .even {
+          background: #2f3b41;
+        }
+
         .title {
           font-weight: bold;
           background: #212a2e;
           position: sticky;
           top: 0;
-        }
-        .even {
-          background: #2f3b41;
         }
 
         tr {

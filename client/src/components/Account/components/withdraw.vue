@@ -17,7 +17,10 @@
       <p>Withdraw history:</p>
       <div id="withdraw-table-div">
         <table id="withdraw-table">
-          <tr v-for="withdrawal in withdrawHistory">
+          <tr
+            v-for="(withdrawal, index) in withdrawHistory"
+            :class="[{'title': index === 0}, {'even': index % 2 == 0}]"
+          >
             <td width="300">{{withdrawal.date}}</td>
             <td width="180">{{withdrawal.amount}}</td>
           </tr>
@@ -77,19 +80,9 @@ export default {
       date: "Date and time",
       amount: "Amount"
     });
-
     this.withdrawHistory = withdrawHistory.data;
   },
-  mounted() {
-    // Add classes to the table
-    let rows = document.getElementsByTagName("tr");
-    console.log(rows);
-    setTimeout(() => {
-      rows.item(0).classList.add("title");
-      for (let i = 0; i < rows.length; i++)
-        if (i > 0 && i % 2 == 0) rows.item(i).classList.add("even");
-    }, 400);
-  }
+  mounted() {}
 };
 </script>
 
@@ -125,14 +118,15 @@ export default {
         border-collapse: collapse;
         border: 2px solid #2f3b41;
 
+        .even {
+          background: #2f3b41;
+        }
+
         .title {
           font-weight: bold;
           background: #212a2e;
           position: sticky;
           top: 0;
-        }
-        .even {
-          background: #2f3b41;
         }
 
         tr {
