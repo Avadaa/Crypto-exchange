@@ -73,7 +73,7 @@ export default {
 #top {
   background: #1b2931;
   color: white;
-  min-width: 700px;
+  min-width: 800px;
   width: 100vw;
   margin-left: -8px;
 

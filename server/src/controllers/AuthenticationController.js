@@ -19,11 +19,22 @@ module.exports = {
         let userInfoQuery = `SELECT * FROM users WHERE id = '${req.body.userId}'`
         let userWalletInfo = await db.query(userInfoQuery)
 
+        //let depositQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`
+        //let deposits = await db.query(depositQuery);
+
+        //let withdrawQuery = `SELECT hash, date, amount FROM withdraws WHERE "userId" = '${req.body.userId}'`
+        //let withdraws = await db.query(withdrawQuery);
+
         res.send({
-            balanceETH: userWalletInfo[0].balanceETH,
-            balanceUSD: userWalletInfo[0].balanceUSD,
-            reservedETH: userWalletInfo[0].reservedETH,
-            reservedUSD: userWalletInfo[0].reservedUSD,
+            balance: {
+                balanceETH: userWalletInfo[0].balanceETH,
+                balanceUSD: userWalletInfo[0].balanceUSD,
+                reservedETH: userWalletInfo[0].reservedETH,
+                reservedUSD: userWalletInfo[0].reservedUSD
+            }
+            //deposits,
+            //withdraws
+
         })
     },
 
@@ -101,5 +112,21 @@ module.exports = {
         else
             res.send({ success: false });
 
-    }
+    },
+
+    async depositHistory(req, res) {
+        let historyQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`
+        let depositHistory = (await db.query(historyQuery));
+
+        res.send(depositHistory);
+
+
+    },
+    async withdrawHistory(req, res) {
+        let historyQuery = `SELECT hash, date, amount FROM withdraws WHERE "userId" = '${req.body.userId}'`
+        let withdrawHistory = (await db.query(historyQuery));
+
+        res.send(withdrawHistory);
+
+    },
 }

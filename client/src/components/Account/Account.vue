@@ -19,13 +19,11 @@ export default {
   name: "Account",
   components: {
     deposit,
-    withdraw,
-    checkedDeposit: false
+    withdraw
   },
   data() {
     return {};
   },
-
   methods: {
     toggleTabs() {
       if (!event.target.classList.contains("active")) {
@@ -56,21 +54,18 @@ export default {
         userId: this.$store.state.user.userId,
         username: this.$store.state.user.username
       });
-      this.$store.dispatch("setBalance", userInfo.data);
+
+      this.$store.dispatch("setBalance", userInfo.data.balance);
     }
   },
   async mounted() {
-    if (!this.checkedDeposit) {
-      const res = await auth.deposit({
-        userId: this.$store.state.user.userId
-      });
+    const res = await auth.deposit({
+      userId: this.$store.state.user.userId
+    });
 
-      if (res.data.success) {
-        delete res.data["success"];
-        this.$store.dispatch("setBalance", res.data);
-      }
-
-      this.checkedDeposit = true;
+    if (res.data.success) {
+      delete res.data["success"];
+      this.$store.dispatch("setBalance", res.data);
     }
   }
 };

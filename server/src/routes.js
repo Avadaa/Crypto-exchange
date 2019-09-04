@@ -20,5 +20,8 @@ module.exports = (app) => {
 
     app.post('/eth/deposit', AuthenticationController.deposit);
 
+    app.post('/api/user/deposithistory', AuthenticationController.depositHistory);
+    app.post('/api/user/withdrawhistory', AuthenticationController.withdrawHistory);
+
 
 }

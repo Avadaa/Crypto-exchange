@@ -16,5 +16,11 @@ export default {
     },
     deposit(userId) {
         return Api().post('eth/deposit', userId);
+    },
+    depositHistory(userId) {
+        return Api().post('api/user/deposithistory', userId);
+    },
+    withdrawHistory(userId) {
+        return Api().post('api/user/withdrawhistory', userId);
     }
 }
