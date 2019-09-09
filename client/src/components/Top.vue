@@ -1,7 +1,7 @@
 <template>
   <div id="top">
     <div style="display: flex; align-items: center;">
-      <img src="../pics/logo.png" height="50" width="50" />
+      <img src="../assets/pics/logo.png" height="50" width="50" />
       <div v-if="!$store.state.isUserLoggedIn">EzGains Exchange</div>
       <div v-if="$store.state.isUserLoggedIn">
         <p class="user">{{$store.state.user.username}}</p>
