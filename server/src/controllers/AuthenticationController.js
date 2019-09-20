@@ -1,5 +1,6 @@
 const Register = require('../pages/register.js')
 const Login = require('../pages/login.js')
+const Trade = require('../pages/trade.js')
 const db = require('../dbQueries');
 const ethereum = require('../Ethereum/ethereum')
 const ethereumConfig = require('../../config/ethereum')
@@ -129,4 +130,8 @@ module.exports = {
         res.send(withdrawHistory);
 
     },
+    async connect(req, res) {
+
+
+    }
 }

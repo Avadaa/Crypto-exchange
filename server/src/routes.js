@@ -22,6 +22,7 @@ module.exports = (app) => {
 
     app.post('/api/user/deposithistory', AuthenticationController.depositHistory);
     app.post('/api/user/withdrawhistory', AuthenticationController.withdrawHistory);
+    app.post('/trade/connect', AuthenticationController.connect);
 
 
 }

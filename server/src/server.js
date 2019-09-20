@@ -1,6 +1,16 @@
 const express = require('express');
 const app = express();
-const path = require('path');
+
+
+
+
+
+
+
+
+
+
+
 
 // Setting up db
 const db = require('knex')(require('../config/database'));
@@ -36,4 +46,9 @@ let server = app.listen(process.env.PORT || 3000, () => {
 require('./routes')(app)
 
 // Exporting the server-object for Socket.IO usage in trading-file
-module.exports = { server: server };
+module.exports = {
+    express: express,
+    app: app
+};
+
+

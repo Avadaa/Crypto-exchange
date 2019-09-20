@@ -41,8 +41,14 @@ export default {
 
   methods: {
     order() {
-      trade.asd();
+      trade.end();
     }
+  },
+
+  async created() {
+    const res = await auth.connectIO({
+      userId: this.$store.state.user.userId
+    });
   }
 };
 </script>
