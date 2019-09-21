@@ -3,17 +3,17 @@
   <div id="trade">
     <div id="inputs">
       <label for="amount">Amount</label>
-      <input type="number" name="amount" v-model="amount" autocomplete="off" />
+      <input type="number" name="amount" v-model="amount" autocomplete="off" id="amount" />
       <br />
       <label for="price">Price</label>
-      <input type="number" name="price" v-model="amount" autocomplete="off" />
+      <input type="number" name="price" v-model="price" autocomplete="off" id="price" />
       <br />
       <label for="market">Market</label>
-      <input type="checkbox" name="market" id="market" v-model="market" autocomplete="off" />
+      <input type="checkbox" name="market" id="market-limit" v-model="market" autocomplete="off" />
       <br />
 
-      <button v-on:click="order();" id="buy">Buy</button>
-      <button v-on:click="order();" id="sell">Sell</button>
+      <button v-on:click="order('buy');" id="buy">Buy</button>
+      <button v-on:click="order('sell');" id="sell">Sell</button>
     </div>
 
     <div id="orderbooks">
@@ -26,7 +26,6 @@
 
 <script>
 import auth from "../../services/AuthenticationService.js";
-let trade = require("./trade");
 
 export default {
   name: "Trade",
@@ -35,20 +34,27 @@ export default {
     return {
       amount: "",
       price: "",
-      market: false
+      market: false,
+      trade: null
     };
   },
 
   methods: {
-    order() {
-      trade.end();
+    order(action) {
+      let amount = Number(document.getElementById("amount").value);
+      let price = Number(document.getElementById("price").value);
+      let market = document.getElementById("market-limit").checked;
+
+      this.trade.order(action, amount, price, market);
     }
   },
 
   async created() {
-    const res = await auth.connectIO({
+    this.trade = require("./trade");
+    this.trade.receiveUserInfo(this.$store.state.user);
+    /*const res = await auth.connectIO({
       userId: this.$store.state.user.userId
-    });
+    });*/
   }
 };
 </script>
@@ -81,7 +87,7 @@ export default {
 
       padding: 5px;
 
-      &#market {
+      &#market-limit {
         transform: scale(2);
         margin: 8px;
         margin-left: 5px;

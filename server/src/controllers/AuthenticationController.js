@@ -131,7 +131,7 @@ module.exports = {
 
     },
     async connect(req, res) {
-
+        //Trade.connect();
 
     }
 }
