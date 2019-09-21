@@ -25,10 +25,15 @@
               <th class="title">Amount</th>
               <th class="title"></th>
             </tr>
+            <tr v-for="(line,index) in orderBook[1]">
+              <td>{{line.price}}</td>
+              <td>{{line.amount}}</td>
+              <td class="order-remove-invisible">X</td>
+            </tr>
           </tbody>
         </table>
       </div>
-      <span id="price">123</span>
+      <span id="currentPrice">0</span>
       <div id="bidDiv" class="sides">
         <table id="bid">
           <tbody>
@@ -36,6 +41,11 @@
               <th class="title">Price</th>
               <th class="title">Amount</th>
               <th class="title"></th>
+            </tr>
+            <tr v-for="(line,index) in orderBook[0]">
+              <td>{{line.price}}</td>
+              <td>{{line.amount}}</td>
+              <td class="order-remove-invisible">X</td>
             </tr>
           </tbody>
         </table>
@@ -46,6 +56,7 @@
 
 <script>
 import auth from "../../services/AuthenticationService.js";
+import { renderOrderBook, findOwnOrders } from "./trade";
 
 export default {
   name: "Trade",
@@ -73,6 +84,16 @@ export default {
   async created() {
     this.trade = require("./trade");
     this.trade.receiveUserInfo(this.$store.state.user);
+  },
+  async mounted() {
+    const obInfo = await auth.obInfo();
+    this.orderBook = obInfo.data.OBcompressed;
+    this.orderBook[1] = this.orderBook[1].reverse(); // So it renders in the right order
+    document.getElementById("currentPrice").innerText =
+      obInfo.data.currentPrice;
+    setTimeout(() => {
+      findOwnOrders();
+    }, 300);
   }
 };
 </script>
@@ -136,54 +157,42 @@ export default {
   }
 
   #orderbooks {
-    width: 500px;
+    width: 400px;
     border: 2px solid white;
     margin-left: 100px;
     margin-top: 20px;
     text-align: center;
 
     #askDiv {
+      overflow: auto;
+
       border: 2px solid rgb(255, 164, 164);
     }
     #bidDiv {
+      overflow: auto;
+
       border: 2px solid rgb(164, 255, 164);
     }
 
     table {
-      overflow: auto;
-      display: block;
-      border: 1px solid #2f3d45;
-
-      margin: 0px 0px 0px 20px;
-
-      th {
-        background: #2f3d45;
-        font-weight: 200;
-        padding: 5px 10px;
+      tbody {
+        th {
+          width: 400px;
+          font-weight: 200;
+          padding: 0;
+        }
       }
     }
 
     .title {
       position: sticky;
       top: 0;
-      background: rgb(82, 82, 82);
+      font-size: 70%;
+      background: #2f3d45;
     }
   }
   .sides {
-    height: 200px;
-  }
-
-  .order-remove-visible {
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
-    color: rgb(255, 142, 142);
-    font-weight: 900;
-  }
-
-  .order-remove-invisible {
-    display: none;
+    height: 30vh;
   }
 }
 </style>

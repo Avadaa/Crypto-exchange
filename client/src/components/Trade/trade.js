@@ -8,42 +8,18 @@ let socket = io("http://localhost:3001");
 
 
 let OB;
-let OBcompressed;
+let currentPrice
+
 let user;
 
 socket.on('transmitOB', (data) => {
     OB = data.OB;
-    OBcompressed = data.OBcompressed;
-
-
-    for (let i = 0; i < OBcompressed[0].length; i++)
-        addRow({ price: OBcompressed[0][i].price, amount: OBcompressed[0][i].amount, side: 0 })
-
-    for (let i = OBcompressed[1].length - 1; i >= 0; i--)
-        addRow({ price: OBcompressed[1][i].price, amount: OBcompressed[1][i].amount, side: 1 })
-
+    currentPrice = data.currentPrice;
     findOwnOrders();
-
 
 });
 
-function addRow(rowData) {
 
-    let html = `
-            <td class="order-price">${rowData.price}</td>
-            <td class="order-amount">${rowData.amount}</td>
-            <td class="order-remove-invisible">X</td>
-            `
-
-    let tr = document.createElement('tr');
-    tr.innerHTML = html;
-    if (rowData.side == 0)
-        $('#bid tbody').append(tr);
-    if (rowData.side == 1) {
-        $('#ask tbody').append(tr);
-    }
-
-}
 
 
 export function order(action, amount, price, market) {
@@ -106,7 +82,7 @@ function matchingPrices(side, price) {
     return false;
 }
 
-function findOwnOrders() {
+export function findOwnOrders() {
 
     let prices = [[], []];
 
@@ -137,6 +113,11 @@ export function receiveUserInfo(data) {
     user.availableETH = user.balanceETH - user.reservedETH;
 
 }
+
+
+
+
+
 
 
 

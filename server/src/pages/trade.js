@@ -29,7 +29,7 @@ io.on('connect', async (socket) => {
 
 
     setTimeout(() => {
-        socket.emit('transmitOB', { OB: orderBook, OBcompressed: compactOB() });
+        socket.emit('transmitOB', { OB: orderBook, currentPrice });
 
     }, 200);
 
@@ -95,6 +95,7 @@ async function addOrder(data) {
     // Negative impact: an unexpected system shutdown would not save the books
     if (OBobject.amount == 420) {
         if (OBobject.price == 1336) {
+            console.log(orderBook)
             let saveQuery = `UPDATE order_book SET "date" = '${new Date()}', "data" = '${JSON.stringify(orderBook)}', "currentPrice" = '${currentPrice}' WHERE "id" = '1'`;
             db.query(saveQuery);
             console.log('Order books saved.');
@@ -174,8 +175,6 @@ async function addOrder(data) {
 
 
     processing = false;
-    console.log('Order ' + data.orderID + ' processed');
-
 }
 
 
@@ -228,7 +227,6 @@ function OBthickness() {
 function compactOB() {
     let OB = [[], []];
 
-
     for (let i = 0; i < 2; i++) {
         for (let j = 0; j < orderBook[i].length; j++) {
             if (OB[i].length == 0 || OB[i][OB[i].length - 1].price != orderBook[i][j].price)
@@ -243,7 +241,6 @@ function compactOB() {
         }
     }
 
-
     return OB;
 }
 
@@ -256,7 +253,11 @@ function compactOB() {
 
 
 
-
+module.exports = {
+    obInfo() {
+        return ({ OB: orderBook, OBcompressed: compactOB(), currentPrice });
+    }
+}
 
 
 

@@ -23,5 +23,8 @@ export default {
     withdrawHistory(userId) {
         return Api().post('api/user/withdrawhistory', userId);
     },
+    obInfo() {
+        return Api().post('api/obinfo');
+    },
 
 }

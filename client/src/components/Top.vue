@@ -5,8 +5,14 @@
       <div v-if="!$store.state.isUserLoggedIn">EzGains Exchange</div>
       <div v-if="$store.state.isUserLoggedIn">
         <p class="user">{{$store.state.user.username}}</p>
-        <p class="user">ETH: {{$store.state.user.balanceETH - $store.state.user.reservedETH}}</p>
-        <p class="user">USD: {{$store.state.user.balanceUSD - $store.state.user.reservedUSD}}</p>
+        <p
+          class="user"
+          id="ethAvailable"
+        >ETH: {{$store.state.user.balanceETH - $store.state.user.reservedETH}}</p>
+        <p
+          class="user"
+          id="usdAvailable"
+        >USD: {{$store.state.user.balanceUSD - $store.state.user.reservedUSD}}</p>
       </div>
     </div>
 

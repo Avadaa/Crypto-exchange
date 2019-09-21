@@ -130,4 +130,8 @@ module.exports = {
         res.send(withdrawHistory);
 
     },
+    obInfo(req, res) {
+        let obInfo = Trade.obInfo();
+        res.send(obInfo);
+    }
 }
