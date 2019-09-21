@@ -23,8 +23,5 @@ export default {
     withdrawHistory(userId) {
         return Api().post('api/user/withdrawhistory', userId);
     },
-    connectIO(userId) {
-        return Api().post('trade/connect', userId);
-    }
 
 }

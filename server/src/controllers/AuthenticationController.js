@@ -130,8 +130,4 @@ module.exports = {
         res.send(withdrawHistory);
 
     },
-    async connect(req, res) {
-        //Trade.connect();
-
-    }
 }
