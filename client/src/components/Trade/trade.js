@@ -24,18 +24,18 @@ socket.on('transmitOB', (data) => {
 
 export function order(action, amount, price, market) {
 
+    amount = Math.round(amount * 10000000) / 10000000;
 
     let orderType = action == 'buy' ? 0 : 1;
 
 
     if (!market && amount > 0 && price > 0)
         if (action == 'buy' && (price * amount <= user.availableUSD) || ((action == 'sell' && amount <= user.availableETH || (amount == 420 && (price == 1336 || price == 1338))))) {
-            // Limit order as a market order (trying to set a limit bid above the current lowest ask)
-            //if(action == 'buy' && OB[1].length > 0 &&  price >= OB[1][0].price || action == 'sell' && OB[0].length > 0 && price <= OB[0][0].price)
-            //    limitAsMarket(amount, price, orderType);
-            //else
-
-            socket.emit('order', { task: 'addOrder', amount, price, user, orderType });
+            //Limit order as a market order (trying to set a limit bid above the current lowest ask)
+            if (action == 'buy' && OB[1].length > 0 && price >= OB[1][0].price || action == 'sell' && OB[0].length > 0 && price <= OB[0][0].price)
+                limitAsMarket(amount, price, orderType);
+            else
+                socket.emit('order', { task: 'addOrder', amount, price, user, orderType });
 
         }
 
@@ -130,18 +130,66 @@ socket.on('marketOrder', async (data) => {
 
         user.balanceUSD = data.balanceUSD;
         user.availableUSD = data.balanceUSD - data.reservedUSD;
-        document.getElementById('usdAvailable').innerText = `USD: ${user.availableUSD}`
+        document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
 
 
         user.balanceETH = data.balanceETH;
         user.availableETH = data.balanceETH - data.reservedETH;
-        document.getElementById('ethAvailable').innerText = `ETH: ${user.availableETH}`
+        document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
 
+    }
+});
+
+//Order book ask side (price, amount):
+//                       5       1
+//                       4       1
+//                       3       1
+//
+// If a user places a bid at $4 for 3 coins, that would result in
+//      a market order of 2 coins and push the price upwards to $4
+//      after that a 1 coin limit bid would be placed at $4
+function limitAsMarket(amount, price, orderType) {
+    let OBside = orderType == 0 ? 1 : 0;
+
+
+    let amountBetween = 0;
+    let marketPrice = price;
+
+    for (let i = 0; i < OB[OBside].length; i++) {
+        if (OBside == 1 && OB[OBside][i].price > price)
+            break;
+
+        if (OBside == 0 && OB[OBside][i].price < price)
+            break;
+
+
+        marketPrice = OB[OBside][i].price;
+        amountBetween += OB[OBside][i].amount;
+    }
+
+    // If we are gonna need a market order and a limit after that
+    if (amount - amountBetween > 0) {
+
+        // Market
+        if (orderType == 0 && (marketPrice * amountBetween <= user.availableUSD) || orderType == 1 && amountBetween <= user.availableETH) {
+            socket.emit('order', { task: 'marketOrder', amount: amountBetween, price: -1, user, orderType });
+
+        }
+
+
+        // Limit (bid or ask)
+        if (orderType == 0 && (price * amount <= user.availableUSD))
+            socket.emit('order', { task: 'addOrder', amount: amount - amountBetween, price, user, orderType });
+
+        if (orderType == 1 && amount <= user.availableETH)
+            socket.emit('order', { task: 'addOrder', amount: amount - amountBetween, price, user, orderType });
 
     }
 
-
-});
+    // If only a market order is needed
+    if (amount - amountBetween <= 0)
+        socket.emit('order', { task: 'marketOrder', amount, price: -1, user, orderType });
+}
 
 
 document.addEventListener('click', () => {

@@ -93,10 +93,12 @@ export default {
       username: this.$store.state.user.username
     });
     userWallets = userWallets.data.balance;
-    document.getElementById(
-      "availableFunds"
-    ).innerText = `Available funds:  ${userWallets.balanceETH -
-      userWallets.reservedETH} ETH`;
+    try {
+      document.getElementById(
+        "availableFunds"
+      ).innerText = `Available funds:  ${userWallets.balanceETH -
+        userWallets.reservedETH} ETH`;
+    } catch (e) {}
   },
   mounted() {}
 };
