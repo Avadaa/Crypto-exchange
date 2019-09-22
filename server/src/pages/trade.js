@@ -121,7 +121,7 @@ async function addOrder(data) {
 
         // If a bid is set, resrve 'amount * price' worth of dollars
         // If an ask is set, reserve 'amount' worth of ETH
-        let change = orderType == 0 ? OBobject.amount * OBobject.price : OBobject.amount;
+        let change = orderType == 0 ? Math.round(OBobject.amount * OBobject.price * 10000000) / 10000000 : Math.round(OBobject.amount * 10000000) / 10000000;
 
 
         //--------------------------------2-------------------------------- 
@@ -217,7 +217,7 @@ async function removeOrder(data) {
     let reserved = side == 0 ? 'reservedUSD' : 'reservedETH';
 
     //--------------------------------2--------------------------------
-    let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${change} WHERE "id" = ${data.user.id}`;
+    let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${Math.round(change * 10000000) / 10000000} WHERE "id" = ${data.user.id}`;
     await db.query(updateUserBalance);
 
 
@@ -240,136 +240,139 @@ async function marketOrder(data) {
     //console.log('Order ' + data.orderID + ' processing started');
     processing = true;
     data.amount = Math.round(data.amount * 10000000) / 10000000;
+    if (data.amount > 0.000001) {
+        // OBside = 0 --> selling to bids(orderBook[0])
+        // Obside = 1 --> buying to asks (orderBook[1])
+        let OBside = data.orderType == 0 ? 1 : 0;
+
+        let thickness = OBthickness();
+
+        if ((OBside == 0 && thickness[0] >= data.amount) || (OBside == 1 && thickness[1] >= data.amount)) {
+            let OBrow = orderBook[OBside][0];
+
+
+            // The amount that changed hands in this transaction
+            let change = OBrow.amount > data.amount ? data.amount : OBrow.amount;
+
+            // Do another test to check that the user has sufficient balance for the order
+            let userinfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
+
+
+            // If the user has enough balance to pull the trigger, but the next order in the books is too expensive, still fill as much as possible
+            // EG: ask side:(price, amount)
+            //                100 ,   1
+            //                 50 ,   1
+            //                 30 ,   1
+            //
+            // A user with $110 balance tries to buy three full coins --> only the two first ones get filled, and he is left with $30 and two coins
+            // If buying, availableUSD >= amount * price
+            // If selling, available ETH >= amount
+            let userHasBalance = OBside == 1 ? userinfo[0].balanceUSD - userinfo[0].reservedUSD >= change * OBrow.price :
+                userinfo[0].balanceETH - userinfo[0].reservedETH >= change;
+
+            if (userHasBalance) {
+
+                let amountAvailable = OBrow.amount;
+
+                // Remove (some of) the bid/ask that is the counterpart in this trade
+                let removeOrderChange = OBside == 0 ? change * OBrow.price : change;
+                let reserved = OBside == 0 ? 'reservedUSD' : 'reservedETH';
+
+                let updateUserReserved = `UPDATE users SET "${reserved}" = "${reserved}" - ${Math.round(removeOrderChange * 10000000) / 10000000} WHERE "id" = ${OBrow.id}`;
+                await db.query(updateUserReserved);
+
+                let removeFully = change >= OBrow.amount;
+                let userClicked = false;
+                io.emit('removeOrder', {
+                    price: OBrow.price,
+                    amount: change,
+                    OB: orderBook,
+                    side: OBside,
+                    id: OBrow.id,
+                    removeFully,
+                    userClicked,
+                });
+
+                // Reduce from the order in the books
+                OBrow.amount = Math.round((OBrow.amount - data.amount) * 10000000) / 10000000;
+
+                // If the first order in the books wasn't enough, remove it
+                if (OBrow.amount <= 0) {
+                    orderBook[OBside].splice(0, 1);
+                    data.amount -= amountAvailable;
+
+                }
+                // If it was, the market order is fully filled.
+                else
+                    data.amount = 0;
+
+
+                // Updating the user's info who initiated the market order
+                let marketTakeBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
+                let marketTakeChange = OBside == 0 ? change : change * OBrow.price;
+                let updateTakeMarketSide = `UPDATE users SET "${marketTakeBalanceSide}" = "${marketTakeBalanceSide}" - ${Math.round(marketTakeChange * 10000000) / 10000000} WHERE "id" = ${data.user.id}`
+                await db.query(updateTakeMarketSide);
+
+                let marketAddBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
+                let marketAddChange = OBside == 0 ? change * OBrow.price : change;
+                let updateAddMarketSide = `UPDATE users SET "${marketAddBalanceSide}" = "${marketAddBalanceSide}" + ${Math.round(marketAddChange * 10000000) / 10000000} WHERE "id" = ${data.user.id}`
+                await db.query(updateAddMarketSide);
+
+
+                // Update the user's info who was on the limit side
+                let limitTakeBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
+                let limitTakeChange = OBside == 0 ? change * OBrow.price : change;
+                let updateTakeLimittSide = `UPDATE users SET "${limitTakeBalanceSide}" = "${limitTakeBalanceSide}" - ${Math.round(limitTakeChange * 10000000) / 10000000} WHERE "id" = ${OBrow.id}`
+                await db.query(updateTakeLimittSide);
+
+                let limitAddBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
+                let limitAddChange = OBside == 0 ? change : change * OBrow.price;
+                let updateAddLimitSide = `UPDATE users SET "${limitAddBalanceSide}" = "${limitAddBalanceSide}" + ${Math.round(limitAddChange * 10000000) / 10000000} WHERE "id" = ${OBrow.id}`
+                await db.query(updateAddLimitSide);
+
+                let marketSide = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
+                marketSide = marketSide[0];
+                let limitSide = await db.query(`SELECT * FROM users WHERE "id" = ${OBrow.id}`);
+                limitSide = limitSide[0];
+
+
+                currentPrice = OBrow.price;
+
+                // Update balance on client's screens
+                io.emit('marketOrder', {
+                    balanceETH: marketSide.balanceETH,
+                    reservedETH: marketSide.reservedETH,
+                    balanceUSD: marketSide.balanceUSD,
+                    reservedUSD: marketSide.reservedUSD,
+                    id: marketSide.id,
+                    currentPrice,
+                    OB: orderBook
+                });
+                io.emit('marketOrder', {
+                    balanceETH: limitSide.balanceETH,
+                    reservedETH: limitSide.reservedETH,
+                    balanceUSD: limitSide.balanceUSD,
+                    reservedUSD: limitSide.reservedUSD,
+                    id: limitSide.id,
+                    currentPrice,
+                    OB: orderBook
+                });
 
 
 
-    // OBside = 0 --> selling to bids(orderBook[0])
-    // Obside = 1 --> buying to asks (orderBook[1])
-    let OBside = data.orderType == 0 ? 1 : 0;
+                let sellOrBuy = OBside == 0 ? 'sell' : 'buy';
+                console.log(sellOrBuy + ' MARKET at ' + OBrow.price + ' for ' + change + ' by ' + data.user.id);
 
-    let thickness = OBthickness();
-
-    if ((OBside == 0 && thickness[0] >= data.amount) || (OBside == 1 && thickness[1] >= data.amount)) {
-        let OBrow = orderBook[OBside][0];
-
-
-        // The amount that changed hands in this transaction
-        let change = OBrow.amount > data.amount ? data.amount : OBrow.amount;
-
-        // Do another test to check that the user has sufficient balance for the order
-        let userinfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
-
-
-        // If the user has enough balance to pull the trigger, but the next order in the books is too expensive, still fill as much as possible
-        // EG: ask side:(price, amount)
-        //                100 ,   1
-        //                 50 ,   1
-        //                 30 ,   1
-        //
-        // A user with $110 balance tries to buy three full coins --> only the two first ones get filled, and he is left with $30 and two coins
-        // If buying, availableUSD >= amount * price
-        // If selling, available ETH >= amount
-        let userHasBalance = OBside == 1 ? userinfo[0].balanceUSD - userinfo[0].reservedUSD >= change * OBrow.price :
-            userinfo[0].balanceETH - userinfo[0].reservedETH >= change;
-
-        if (userHasBalance) {
-
-            let amountAvailable = OBrow.amount;
-
-            // Remove (some of) the bid/ask that is the counterpart in this trade
-            let removeOrderChange = OBside == 0 ? change * OBrow.price : change;
-            let reserved = OBside == 0 ? 'reservedUSD' : 'reservedETH';
-
-            let updateUserReserved = `UPDATE users SET "${reserved}" = "${reserved}" - ${removeOrderChange} WHERE "id" = ${OBrow.id}`;
-            await db.query(updateUserReserved);
-
-            let removeFully = change >= OBrow.amount;
-            let userClicked = false;
-            io.emit('removeOrder', {
-                price: OBrow.price,
-                amount: change,
-                OB: orderBook,
-                side: OBside,
-                id: OBrow.id,
-                removeFully,
-                userClicked,
-            });
-
-            // Reduce from the order in the books
-            OBrow.amount -= data.amount;
-
-            // If the first order in the books wasn't enough, remove it
-            if (OBrow.amount <= 0) {
-                orderBook[OBside].splice(0, 1);
-                data.amount -= amountAvailable;
-
+                // If the market order didn't get filled, repeat the process
+                if (data.amount > 0)
+                    marketOrder(data);
             }
-            // If it was, the market order is fully filled.
-            else
-                data.amount = 0;
-
-
-            // Updating the user's info who initiated the market order
-            let marketTakeBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
-            let marketTakeChange = OBside == 0 ? change : change * OBrow.price;
-            let updateTakeMarketSide = `UPDATE users SET "${marketTakeBalanceSide}" = "${marketTakeBalanceSide}" - ${marketTakeChange} WHERE "id" = ${data.user.id}`
-            await db.query(updateTakeMarketSide);
-
-            let marketAddBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
-            let marketAddChange = OBside == 0 ? change * OBrow.price : change;
-            let updateAddMarketSide = `UPDATE users SET "${marketAddBalanceSide}" = "${marketAddBalanceSide}" + ${marketAddChange} WHERE "id" = ${data.user.id}`
-            await db.query(updateAddMarketSide);
-
-
-            // Update the user's info who was on the limit side
-            let limitTakeBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
-            let limitTakeChange = OBside == 0 ? change * OBrow.price : change;
-            let updateTakeLimittSide = `UPDATE users SET "${limitTakeBalanceSide}" = "${limitTakeBalanceSide}" - ${limitTakeChange} WHERE "id" = ${OBrow.id}`
-            await db.query(updateTakeLimittSide);
-
-            let limitAddBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
-            let limitAddChange = OBside == 0 ? change : change * OBrow.price;
-            let updateAddLimitSide = `UPDATE users SET "${limitAddBalanceSide}" = "${limitAddBalanceSide}" + ${limitAddChange} WHERE "id" = ${OBrow.id}`
-            await db.query(updateAddLimitSide);
-
-            let marketSide = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
-            marketSide = marketSide[0];
-            let limitSide = await db.query(`SELECT * FROM users WHERE "id" = ${OBrow.id}`);
-            limitSide = limitSide[0];
-
-
-            currentPrice = OBrow.price;
-
-            // Update balance on client's screens
-            io.emit('marketOrder', {
-                balanceETH: marketSide.balanceETH,
-                reservedETH: marketSide.reservedETH,
-                balanceUSD: marketSide.balanceUSD,
-                reservedUSD: marketSide.reservedUSD,
-                id: marketSide.id,
-                currentPrice,
-                OB: orderBook
-            });
-            io.emit('marketOrder', {
-                balanceETH: limitSide.balanceETH,
-                reservedETH: limitSide.reservedETH,
-                balanceUSD: limitSide.balanceUSD,
-                reservedUSD: limitSide.reservedUSD,
-                id: limitSide.id,
-                currentPrice,
-                OB: orderBook
-            });
-
-
-
-            let sellOrBuy = OBside == 0 ? 'sell' : 'buy';
-            console.log(sellOrBuy + ' MARKET at ' + OBrow.price + ' for ' + change + ' by ' + data.user.id);
-
-            // If the market order didn't get filled, repeat the process
-            if (data.amount > 0)
-                marketOrder(data);
         }
+
     }
+
+
+
     processing = false;
 }
 
