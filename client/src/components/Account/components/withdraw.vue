@@ -1,7 +1,7 @@
 <template>
   <div id="withdraw">
     <div id="withdraw-input">
-      <p>Available funds: {{this.$store.state.user.balanceETH - this.$store.state.user.reservedETH}} ETH</p>
+      <p id="availableFunds"></p>
       <label for="address">Address</label>
       <input type="text" name="address" v-model="address" autocomplete="off" />
       <br />
@@ -60,9 +60,15 @@ export default {
       if (res.data.success) {
         document.getElementById("msg-ul").style.color = "rgb(182, 255, 188)";
 
-        delete res.data["success"];
-        delete res.data["messages"];
-        this.$store.dispatch("setBalance", res.data);
+        document.getElementById("ethAvailable").innerText =
+          res.data.balanceETH - res.data.reservedETH;
+        document.getElementById("usdAvailable").innerText =
+          res.data.balanceUSD - res.data.reservedUSD;
+
+        document.getElementById(
+          "availableFunds"
+        ).innerText = `Available funds:  ${res.data.balanceETH -
+          res.data.reservedETH} ETH`;
       }
     }
   },
@@ -81,6 +87,16 @@ export default {
       amount: "Amount"
     });
     this.withdrawHistory = withdrawHistory.data;
+
+    let userWallets = await auth.user({
+      userId: this.$store.state.user.userId,
+      username: this.$store.state.user.username
+    });
+    userWallets = userWallets.data.balance;
+    document.getElementById(
+      "availableFunds"
+    ).innerText = `Available funds:  ${userWallets.balanceETH -
+      userWallets.reservedETH} ETH`;
   },
   mounted() {}
 };

@@ -54,15 +54,38 @@
 
 <script>
 import router from "../router/index";
+import auth from "../services/AuthenticationService";
 
 export default {
   name: "top",
   components: {},
   data() {
-    return {};
+    return {
+      ethAvailable: null,
+      usdAvailable: null
+    };
   },
 
-  created: function() {},
+  created: async function() {
+    if (
+      this.$store.state.isUserLoggedIn &&
+      this.$store.state.user.userId != null
+    ) {
+      // Load user's wallet balance info from database
+      // (balanceETH, balanceUSD, reservedETH, reservedUSD)
+      let userWallets = await auth.user({
+        userId: this.$store.state.user.userId,
+        username: this.$store.state.user.username
+      });
+      userWallets = userWallets.data.balance;
+      document.getElementById(
+        "ethAvailable"
+      ).innerText = `ETH: ${userWallets.balanceETH - userWallets.reservedETH}`;
+      document.getElementById(
+        "usdAvailable"
+      ).innerText = `USD: ${userWallets.balanceUSD - userWallets.reservedUSD}`;
+    }
+  },
 
   methods: {
     logout() {

@@ -1,5 +1,3 @@
-import store from '../../store/store'
-
 import io from "socket.io-client";
 var script = document.createElement('script');
 script.src = 'http://code.jquery.com/jquery-1.11.0.min.js';
@@ -77,8 +75,6 @@ socket.on('addOrder', async (data) => {
 
 
     OB = data.OB;
-    await store.dispatch("setBalance", data.balance);
-
     findOwnOrders();
 
 });
@@ -122,8 +118,6 @@ socket.on('removeOrder', async (data) => {
         document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
     }
 
-    console.log(data)
-    await store.dispatch("setBalance", data.balance);
 
 });
 
@@ -141,15 +135,6 @@ socket.on('marketOrder', async (data) => {
         user.balanceETH = data.balanceETH;
         user.availableETH = data.balanceETH - data.reservedETH;
         document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
-
-        let balances = {
-            balanceETH: user.balanceETH,
-            balanceUSD: user.balanceUSD,
-            reservedETH: user.reservedETH,
-            reservedUSD: user.reservedUSD
-        }
-        //console.log(balances)
-        await store.dispatch("setBalance", balances);
 
 
     }

@@ -155,7 +155,6 @@ async function addOrder(data) {
             let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" + ${change} WHERE "id" = ${OBobject.id}`;
             await db.query(updateUserBalance);
 
-            let userWalletInfo = await db.query(`SELECT * FROM users WHERE "id" = ${OBobject.id}`);
 
 
             console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
@@ -170,12 +169,6 @@ async function addOrder(data) {
                 type: emitType,
                 OB: orderBook,
                 userID: OBobject.id,
-                balance: {
-                    balanceETH: userWalletInfo[0].balanceETH,
-                    balanceUSD: userWalletInfo[0].balanceUSD,
-                    reservedETH: userWalletInfo[0].reservedETH,
-                    reservedUSD: userWalletInfo[0].reservedUSD
-                }
             });
 
         }
@@ -227,7 +220,6 @@ async function removeOrder(data) {
     let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${change} WHERE "id" = ${data.user.id}`;
     await db.query(updateUserBalance);
 
-    let userWalletInfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
 
     //--------------------------------3--------------------------------
     let removeFully = true;
@@ -239,12 +231,6 @@ async function removeOrder(data) {
             data.user.id,
         removeFully,
         userClicked,
-        balance: {
-            balanceETH: userWalletInfo[0].balanceETH,
-            balanceUSD: userWalletInfo[0].balanceUSD,
-            reservedETH: userWalletInfo[0].reservedETH,
-            reservedUSD: userWalletInfo[0].reservedUSD
-        }
     })
     console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
 }
@@ -297,8 +283,6 @@ async function marketOrder(data) {
             let updateUserReserved = `UPDATE users SET "${reserved}" = "${reserved}" - ${removeOrderChange} WHERE "id" = ${OBrow.id}`;
             await db.query(updateUserReserved);
 
-            let userWalletInfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
-
             let removeFully = change >= OBrow.amount;
             let userClicked = false;
             io.emit('removeOrder', {
@@ -309,12 +293,6 @@ async function marketOrder(data) {
                 id: OBrow.id,
                 removeFully,
                 userClicked,
-                balance: {
-                    balanceETH: userWalletInfo[0].balanceETH,
-                    balanceUSD: userWalletInfo[0].balanceUSD,
-                    reservedETH: userWalletInfo[0].reservedETH,
-                    reservedUSD: userWalletInfo[0].reservedUSD
-                }
             });
 
             // Reduce from the order in the books

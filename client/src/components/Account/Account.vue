@@ -43,21 +43,7 @@ export default {
       }
     }
   },
-  async created() {
-    if (
-      this.$store.state.isUserLoggedIn &&
-      this.$store.state.user.userId != null
-    ) {
-      // Load user's wallet balance info from database
-      // (balanceETH, balanceUSD, reservedETH, reservedUSD)
-      const userInfo = await auth.user({
-        userId: this.$store.state.user.userId,
-        username: this.$store.state.user.username
-      });
 
-      this.$store.dispatch("setBalance", userInfo.data.balance);
-    }
-  },
   async mounted() {
     const res = await auth.deposit({
       userId: this.$store.state.user.userId
@@ -65,7 +51,10 @@ export default {
 
     if (res.data.success) {
       delete res.data["success"];
-      this.$store.dispatch("setBalance", res.data);
+      document.getElementById("ethAvailable").innerText =
+        res.data.balanceETH - res.data.reservedETH;
+      document.getElementById("usdAvailable").innerText =
+        res.data.balanceUSD - res.data.reservedUSD;
     }
   }
 };
