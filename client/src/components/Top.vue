@@ -2,17 +2,11 @@
   <div id="top">
     <div style="display: flex; align-items: center;">
       <img src="../assets/pics/logo.png" height="50" width="50" />
-      <div v-if="!$store.state.isUserLoggedIn">EzGains Exchange</div>
-      <div v-if="$store.state.isUserLoggedIn">
+      <div v-if="!this.$store.state.isUserLoggedIn">EzGains Exchange</div>
+      <div v-if="this.$store.state.isUserLoggedIn">
         <p class="user">{{$store.state.user.username}}</p>
-        <p
-          class="user"
-          id="ethAvailable"
-        >ETH: {{$store.state.user.balanceETH - $store.state.user.reservedETH}}</p>
-        <p
-          class="user"
-          id="usdAvailable"
-        >USD: {{$store.state.user.balanceUSD - $store.state.user.reservedUSD}}</p>
+        <p class="user" id="ethAvailable"></p>
+        <p class="user" id="usdAvailable"></p>
       </div>
     </div>
 
@@ -55,36 +49,13 @@
 <script>
 import router from "../router/index";
 import auth from "../services/AuthenticationService";
+import { async } from "q";
 
 export default {
   name: "top",
   components: {},
   data() {
-    return {
-      ethAvailable: null,
-      usdAvailable: null
-    };
-  },
-
-  created: async function() {
-    if (
-      this.$store.state.isUserLoggedIn &&
-      this.$store.state.user.userId != null
-    ) {
-      // Load user's wallet balance info from database
-      // (balanceETH, balanceUSD, reservedETH, reservedUSD)
-      let userWallets = await auth.user({
-        userId: this.$store.state.user.userId,
-        username: this.$store.state.user.username
-      });
-      userWallets = userWallets.data.balance;
-      document.getElementById(
-        "ethAvailable"
-      ).innerText = `ETH: ${userWallets.balanceETH - userWallets.reservedETH}`;
-      document.getElementById(
-        "usdAvailable"
-      ).innerText = `USD: ${userWallets.balanceUSD - userWallets.reservedUSD}`;
-    }
+    return {};
   },
 
   methods: {

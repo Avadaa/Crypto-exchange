@@ -51,6 +51,7 @@ export default {
 
     if (res.data.success) {
       delete res.data["success"];
+
       document.getElementById("ethAvailable").innerText =
         res.data.balanceETH - res.data.reservedETH;
       document.getElementById("usdAvailable").innerText =

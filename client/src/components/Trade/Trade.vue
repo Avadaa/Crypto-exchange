@@ -86,7 +86,35 @@ export default {
 
   async created() {
     this.trade = require("./trade");
-    this.trade.receiveUserInfo(this.$store.state.user);
+
+    let userWallets = await auth.user({
+      userId: this.$store.state.user.userId,
+      username: this.$store.state.user.username
+    });
+    userWallets = userWallets.data.balance;
+
+    let user = this.$store.state.user;
+    user = {
+      address: user.address,
+      userId: user.userId,
+      username: user.username,
+      balanceUSD: userWallets.balanceUSD,
+      balanceETH: userWallets.balanceETH,
+      reservedUSD: userWallets.reservedUSD,
+      reservedETH: userWallets.reservedETH
+    };
+
+    this.trade.receiveUserInfo(user);
+
+    // Set user's balance on page load after logging in
+    if (this.$store.state.isUserLoggedIn && this.$store.state.user.userId > 0) {
+      document.getElementById(
+        "ethAvailable"
+      ).innerText = `ETH: ${userWallets.balanceETH - userWallets.reservedETH}`;
+      document.getElementById(
+        "usdAvailable"
+      ).innerText = `USD: ${userWallets.balanceUSD - userWallets.reservedUSD}`;
+    }
   },
   async mounted() {
     const obInfo = await auth.obInfo();

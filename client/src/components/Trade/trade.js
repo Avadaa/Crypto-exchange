@@ -234,8 +234,8 @@ export function findOwnOrders() {
 export async function receiveUserInfo(data) {
 
 
-
     user = data;
+
     user.id = user.userId
     user.availableUSD = user.balanceUSD - user.reservedUSD;
     user.availableETH = user.balanceETH - user.reservedETH;
