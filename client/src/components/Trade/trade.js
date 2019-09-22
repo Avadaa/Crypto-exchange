@@ -1,3 +1,5 @@
+import store from '../../store/store'
+
 import io from "socket.io-client";
 var script = document.createElement('script');
 script.src = 'http://code.jquery.com/jquery-1.11.0.min.js';
@@ -38,10 +40,16 @@ export function order(action, amount, price, market) {
             socket.emit('order', { task: 'addOrder', amount, price, user, orderType });
 
         }
+
+    if (market && amount > 0 && (OB[1][0] && action == 'buy') || (OB[0][0] && action == 'sell'))
+        if (action == 'buy' && (OB[1][0].price * amount <= user.availableUSD) || (action == 'sell' && amount <= user.availableETH))
+            socket.emit('order', { task: 'marketOrder', amount, price: -1, user, orderType });
+
+
 }
 
 
-socket.on('addOrder', (data) => {
+socket.on('addOrder', async (data) => {
     let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
     if (data.type == 'bid') {
@@ -67,14 +75,16 @@ socket.on('addOrder', (data) => {
 
     }
 
-    console.log(data.OB)
 
     OB = data.OB;
+    await store.dispatch("setBalance", data.balance);
+
     findOwnOrders();
 
 });
 
-socket.on('removeOrder', (data) => {
+socket.on('removeOrder', async (data) => {
+
     OB = data.OB;
     let side = data.side == 0 ? 'bid' : 'ask';
     let rows = $($(`#${side}`).children()[0]).children()
@@ -91,7 +101,7 @@ socket.on('removeOrder', (data) => {
 
             // If a certain price has multiple orders from multiple users, just update the amount
             if (Number($(rows[i]).children()[1].innerText) > data.amount)
-                $(rows[i]).children()[1].innerText -= data.amount;
+                $(rows[i]).children()[1].innerText = Math.round((Number($(rows[i]).children()[1].innerText) - data.amount) * 10000000) / 10000000;
 
             // If not, remove the whole row-element
             else
@@ -111,6 +121,40 @@ socket.on('removeOrder', (data) => {
         user.availableETH += data.amount;
         document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
     }
+
+    console.log(data)
+    await store.dispatch("setBalance", data.balance);
+
+});
+
+socket.on('marketOrder', async (data) => {
+    document.getElementById('currentPrice').innerText = `${data.currentPrice}`;
+    OB = data.OB;
+
+    if (data.id == user.id) {
+
+        user.balanceUSD = data.balanceUSD;
+        user.availableUSD = data.balanceUSD - data.reservedUSD;
+        document.getElementById('usdAvailable').innerText = `USD available: ${user.availableUSD}`
+
+
+        user.balanceETH = data.balanceETH;
+        user.availableETH = data.balanceETH - data.reservedETH;
+        document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
+
+        let balances = {
+            balanceETH: user.balanceETH,
+            balanceUSD: user.balanceUSD,
+            reservedETH: user.reservedETH,
+            reservedUSD: user.reservedUSD
+        }
+        //console.log(balances)
+        await store.dispatch("setBalance", balances);
+
+
+    }
+
+
 });
 
 
@@ -202,12 +246,16 @@ export function findOwnOrders() {
 }
 
 
-export function receiveUserInfo(data) {
+export async function receiveUserInfo(data) {
+
+
 
     user = data;
     user.id = user.userId
     user.availableUSD = user.balanceUSD - user.reservedUSD;
     user.availableETH = user.balanceETH - user.reservedETH;
+
+
 
 }
 

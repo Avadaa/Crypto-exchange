@@ -68,8 +68,8 @@ async function processQue(data) {
     if (data.task == 'removeOrder')
         await removeOrder(data);
 
-    //if (data.task == 'marketOrder')
-    //    await marketOrder(data);
+    if (data.task == 'marketOrder')
+        await marketOrder(data);
 }
 
 // Adding a new order (bid or ask) to the books
@@ -153,8 +153,11 @@ async function addOrder(data) {
             //--------------------------------4--------------------------------        
             // Update 'reserved' amount in database
             let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" + ${change} WHERE "id" = ${OBobject.id}`;
-
             await db.query(updateUserBalance);
+
+            let userWalletInfo = await db.query(`SELECT * FROM users WHERE "id" = ${OBobject.id}`);
+
+
             console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
 
             //--------------------------------5--------------------------------         
@@ -166,7 +169,13 @@ async function addOrder(data) {
                 index: index,
                 type: emitType,
                 OB: orderBook,
-                userID: OBobject.id
+                userID: OBobject.id,
+                balance: {
+                    balanceETH: userWalletInfo[0].balanceETH,
+                    balanceUSD: userWalletInfo[0].balanceUSD,
+                    reservedETH: userWalletInfo[0].reservedETH,
+                    reservedUSD: userWalletInfo[0].reservedUSD
+                }
             });
 
         }
@@ -178,39 +187,7 @@ async function addOrder(data) {
 }
 
 
-function findIndex(type, side, inputPrice) {
-    let OB;
 
-    if (type == 'server') OB = orderBook;
-    if (type == 'client') OB = compactOB();
-
-
-    // No entries, the first entry is going to be at index 0
-    if (OB[side].length == 0) return 0;
-
-    for (let i = 0; i < OB[side].length; i++) {
-
-        if (side == 1 && Number(inputPrice) < Number(OB[side][i].price)) {
-            return i;
-
-        }
-        if (side == 0 && Number(inputPrice) > Number(OB[side][i].price))
-            return i;
-    }
-
-    return OB[side].length;
-}
-
-function OBthickness() {
-
-    let thickness = [0, 0];
-
-    for (let i = 0; i < 2; i++)
-        for (let j = 0; j < orderBook[i].length; j++)
-            thickness[i] += orderBook[i][j].amount;
-
-    return thickness;
-}
 
 
 // Delete all instances on the same price made by the same user
@@ -250,11 +227,172 @@ async function removeOrder(data) {
     let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${change} WHERE "id" = ${data.user.id}`;
     await db.query(updateUserBalance);
 
+    let userWalletInfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
+
     //--------------------------------3--------------------------------
     let removeFully = true;
     let userClicked = true;
-    io.emit('removeOrder', { price: data.price, amount: amountRemoved, OB: orderBook, side, id: data.user.id, removeFully, userClicked })
+    io.emit('removeOrder', {
+        price: data.price,
+        amount: amountRemoved,
+        OB: orderBook, side, id:
+            data.user.id,
+        removeFully,
+        userClicked,
+        balance: {
+            balanceETH: userWalletInfo[0].balanceETH,
+            balanceUSD: userWalletInfo[0].balanceUSD,
+            reservedETH: userWalletInfo[0].reservedETH,
+            reservedUSD: userWalletInfo[0].reservedUSD
+        }
+    })
     console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
+}
+
+// Making an actual trade (market order)
+async function marketOrder(data) {
+    //console.log('Order ' + data.orderID + ' processing started');
+    processing = true;
+    data.amount = Math.round(data.amount * 10000000) / 10000000;
+
+
+
+    // OBside = 0 --> selling to bids(orderBook[0])
+    // Obside = 1 --> buying to asks (orderBook[1])
+    let OBside = data.orderType == 0 ? 1 : 0;
+
+    let thickness = OBthickness();
+
+    if ((OBside == 0 && thickness[0] >= data.amount) || (OBside == 1 && thickness[1] >= data.amount)) {
+        let OBrow = orderBook[OBside][0];
+
+
+        // The amount that changed hands in this transaction
+        let change = OBrow.amount > data.amount ? data.amount : OBrow.amount;
+
+        // Do another test to check that the user has sufficient balance for the order
+        let userinfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
+
+
+        // If the user has enough balance to pull the trigger, but the next order in the books is too expensive, still fill as much as possible
+        // EG: ask side:(price, amount)
+        //                100 ,   1
+        //                 50 ,   1
+        //                 30 ,   1
+        //
+        // A user with $110 balance tries to buy three full coins --> only the two first ones get filled, and he is left with $30 and two coins
+        // If buying, availableUSD >= amount * price
+        // If selling, available ETH >= amount
+        let userHasBalance = OBside == 1 ? userinfo[0].balanceUSD - userinfo[0].reservedUSD >= change * OBrow.price :
+            userinfo[0].balanceETH - userinfo[0].reservedETH >= change;
+
+        if (userHasBalance) {
+
+            let amountAvailable = OBrow.amount;
+
+            // Remove (some of) the bid/ask that is the counterpart in this trade
+            let removeOrderChange = OBside == 0 ? change * OBrow.price : change;
+            let reserved = OBside == 0 ? 'reservedUSD' : 'reservedETH';
+
+            let updateUserReserved = `UPDATE users SET "${reserved}" = "${reserved}" - ${removeOrderChange} WHERE "id" = ${OBrow.id}`;
+            await db.query(updateUserReserved);
+
+            let userWalletInfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
+
+            let removeFully = change >= OBrow.amount;
+            let userClicked = false;
+            io.emit('removeOrder', {
+                price: OBrow.price,
+                amount: change,
+                OB: orderBook,
+                side: OBside,
+                id: OBrow.id,
+                removeFully,
+                userClicked,
+                balance: {
+                    balanceETH: userWalletInfo[0].balanceETH,
+                    balanceUSD: userWalletInfo[0].balanceUSD,
+                    reservedETH: userWalletInfo[0].reservedETH,
+                    reservedUSD: userWalletInfo[0].reservedUSD
+                }
+            });
+
+            // Reduce from the order in the books
+            OBrow.amount -= data.amount;
+
+            // If the first order in the books wasn't enough, remove it
+            if (OBrow.amount <= 0) {
+                orderBook[OBside].splice(0, 1);
+                data.amount -= amountAvailable;
+
+            }
+            // If it was, the market order is fully filled.
+            else
+                data.amount = 0;
+
+
+            // Updating the user's info who initiated the market order
+            let marketTakeBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
+            let marketTakeChange = OBside == 0 ? change : change * OBrow.price;
+            let updateTakeMarketSide = `UPDATE users SET "${marketTakeBalanceSide}" = "${marketTakeBalanceSide}" - ${marketTakeChange} WHERE "id" = ${data.user.id}`
+            await db.query(updateTakeMarketSide);
+
+            let marketAddBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
+            let marketAddChange = OBside == 0 ? change * OBrow.price : change;
+            let updateAddMarketSide = `UPDATE users SET "${marketAddBalanceSide}" = "${marketAddBalanceSide}" + ${marketAddChange} WHERE "id" = ${data.user.id}`
+            await db.query(updateAddMarketSide);
+
+
+            // Update the user's info who was on the limit side
+            let limitTakeBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
+            let limitTakeChange = OBside == 0 ? change * OBrow.price : change;
+            let updateTakeLimittSide = `UPDATE users SET "${limitTakeBalanceSide}" = "${limitTakeBalanceSide}" - ${limitTakeChange} WHERE "id" = ${OBrow.id}`
+            await db.query(updateTakeLimittSide);
+
+            let limitAddBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
+            let limitAddChange = OBside == 0 ? change : change * OBrow.price;
+            let updateAddLimitSide = `UPDATE users SET "${limitAddBalanceSide}" = "${limitAddBalanceSide}" + ${limitAddChange} WHERE "id" = ${OBrow.id}`
+            await db.query(updateAddLimitSide);
+
+            let marketSide = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
+            marketSide = marketSide[0];
+            let limitSide = await db.query(`SELECT * FROM users WHERE "id" = ${OBrow.id}`);
+            limitSide = limitSide[0];
+
+
+            currentPrice = OBrow.price;
+
+            // Update balance on client's screens
+            io.emit('marketOrder', {
+                balanceETH: marketSide.balanceETH,
+                reservedETH: marketSide.reservedETH,
+                balanceUSD: marketSide.balanceUSD,
+                reservedUSD: marketSide.reservedUSD,
+                id: marketSide.id,
+                currentPrice,
+                OB: orderBook
+            });
+            io.emit('marketOrder', {
+                balanceETH: limitSide.balanceETH,
+                reservedETH: limitSide.reservedETH,
+                balanceUSD: limitSide.balanceUSD,
+                reservedUSD: limitSide.reservedUSD,
+                id: limitSide.id,
+                currentPrice,
+                OB: orderBook
+            });
+
+
+
+            let sellOrBuy = OBside == 0 ? 'sell' : 'buy';
+            console.log(sellOrBuy + ' MARKET at ' + OBrow.price + ' for ' + change + ' by ' + data.user.id);
+
+            // If the market order didn't get filled, repeat the process
+            if (data.amount > 0)
+                marketOrder(data);
+        }
+    }
+    processing = false;
 }
 
 
@@ -290,7 +428,39 @@ function compactOB() {
 }
 
 
+function findIndex(type, side, inputPrice) {
+    let OB;
 
+    if (type == 'server') OB = orderBook;
+    if (type == 'client') OB = compactOB();
+
+
+    // No entries, the first entry is going to be at index 0
+    if (OB[side].length == 0) return 0;
+
+    for (let i = 0; i < OB[side].length; i++) {
+
+        if (side == 1 && Number(inputPrice) < Number(OB[side][i].price)) {
+            return i;
+
+        }
+        if (side == 0 && Number(inputPrice) > Number(OB[side][i].price))
+            return i;
+    }
+
+    return OB[side].length;
+}
+
+function OBthickness() {
+
+    let thickness = [0, 0];
+
+    for (let i = 0; i < 2; i++)
+        for (let j = 0; j < orderBook[i].length; j++)
+            thickness[i] += orderBook[i][j].amount;
+
+    return thickness;
+}
 
 
 

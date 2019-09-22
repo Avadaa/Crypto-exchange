@@ -75,6 +75,7 @@ export default new Vuex.Store({
 
             commit('setBalance', localStorageUser);
         },
+
         // Fetch user information from browser's storage and store it to state variable
         getLocalUser({ commit }) {
             let localStorageUser = {
