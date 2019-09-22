@@ -83,6 +83,9 @@ async function addOrder(data) {
 
     processing = true;
 
+    data.price = Math.round(data.price * 10000000) / 10000000;
+    data.amount = Math.round(data.amount * 10000000) / 10000000;
+
 
     let OBobject = { price: data.price, amount: data.amount, id: Number(data.user.userId) };
     let orderType = data.orderType; // 0 = bid, 1 = ask
@@ -249,10 +252,11 @@ async function marketOrder(data) {
 
         if ((OBside == 0 && thickness[0] >= data.amount) || (OBside == 1 && thickness[1] >= data.amount)) {
             let OBrow = orderBook[OBside][0];
+            OBrow.price = Math.round(OBrow.price * 10000000) / 10000000;
 
 
             // The amount that changed hands in this transaction
-            let change = OBrow.amount > data.amount ? data.amount : OBrow.amount;
+            let change = OBrow.amount > data.amount ? Math.round(data.amount * 10000000) / 10000000 : Math.round(OBrow.amount * 10000000) / 10000000;
 
             // Do another test to check that the user has sufficient balance for the order
             let userinfo = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);

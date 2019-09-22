@@ -53,14 +53,15 @@ socket.on('addOrder', async (data) => {
     if (data.type == 'bid') {
         if (data.userID == user.id) {
             user.availableUSD -= data.order.price * data.order.amount;
-            document.getElementById('usdAvailable').innerText = `USD available: ${user.availableUSD}`
+            document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
         }
 
 
     }
     if (data.userID == user.id && data.type == 'ask') {
+
         user.availableETH -= data.order.amount;
-        document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
+        document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
     }
 
     if (matchingPriceAmount == false) {
@@ -110,12 +111,12 @@ socket.on('removeOrder', async (data) => {
     if (data.userClicked && data.id == user.id && side == 'bid') {
         user.availableUSD += data.price * data.amount;
 
-        document.getElementById('usdAvailable').innerText = `USD available: ${user.availableUSD}`
+        document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
 
     }
     if (data.userClicked && data.id == user.id && side == 'ask') {
         user.availableETH += data.amount;
-        document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
+        document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
     }
 
 
@@ -124,18 +125,17 @@ socket.on('removeOrder', async (data) => {
 socket.on('marketOrder', async (data) => {
     document.getElementById('currentPrice').innerText = `${data.currentPrice}`;
     OB = data.OB;
-    console.log(OB)
 
     if (data.id == user.id) {
 
         user.balanceUSD = data.balanceUSD;
         user.availableUSD = data.balanceUSD - data.reservedUSD;
-        document.getElementById('usdAvailable').innerText = `USD available: ${user.availableUSD}`
+        document.getElementById('usdAvailable').innerText = `USD: ${user.availableUSD}`
 
 
         user.balanceETH = data.balanceETH;
         user.availableETH = data.balanceETH - data.reservedETH;
-        document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
+        document.getElementById('ethAvailable').innerText = `ETH: ${user.availableETH}`
 
 
     }
