@@ -25,9 +25,9 @@
               <th class="title">Amount</th>
               <th class="title"></th>
             </tr>
-            <tr v-for="(line,index) in orderBook[1]">
+            <tr v-for="(line) in orderBook[1]">
               <td>{{line.price}}</td>
-              <td>{{line.amount}}</td>
+              <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
               <td class="order-remove-invisible">X</td>
             </tr>
           </tbody>
@@ -42,9 +42,9 @@
               <th class="title">Amount</th>
               <th class="title"></th>
             </tr>
-            <tr v-for="(line,index) in orderBook[0]">
+            <tr v-for="(line) in orderBook[0]">
               <td>{{line.price}}</td>
-              <td>{{line.amount}}</td>
+              <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
               <td class="order-remove-invisible">X</td>
             </tr>
           </tbody>
@@ -73,8 +73,11 @@ export default {
 
   methods: {
     order(action) {
-      let amount = Number(document.getElementById("amount").value);
-      let price = Number(document.getElementById("price").value);
+      let amount =
+        Math.round(Number(document.getElementById("amount").value) * 10000000) /
+        10000000;
+      let price =
+        Math.round(Number(document.getElementById("price").value) * 100) / 100;
       let market = document.getElementById("market-limit").checked;
 
       this.trade.order(action, amount, price, market);
@@ -193,6 +196,11 @@ export default {
   }
   .sides {
     height: 30vh;
+  }
+
+  .disabled {
+    pointer-events: none;
+    background: rgb(151, 151, 151);
   }
 }
 </style>

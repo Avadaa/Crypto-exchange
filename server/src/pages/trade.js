@@ -65,8 +65,8 @@ async function processQue(data) {
     if (data.task == 'addOrder')
         await addOrder(data);
 
-    //if (data.task == 'removeOrder')
-    //    await removeOrder(data);
+    if (data.task == 'removeOrder')
+        await removeOrder(data);
 
     //if (data.task == 'marketOrder')
     //    await marketOrder(data);
@@ -210,6 +210,51 @@ function OBthickness() {
             thickness[i] += orderBook[i][j].amount;
 
     return thickness;
+}
+
+
+// Delete all instances on the same price made by the same user
+// 1. Calculate how much the user has as orders on the same price
+// 2. Deduct from 'reserved balance' in database
+// 3. Emit changes to client side
+async function removeOrder(data) {
+
+    //--------------------------------1--------------------------------
+    let amountRemoved = 0;
+
+    let side = data.side == 'bid' ? 0 : 1;
+    for (let i = 0; i < orderBook[side].length; i++) {
+        let obRow = orderBook[side][i];
+        if (obRow.price == data.price && obRow.id == data.user.id) {
+            amountRemoved += obRow.amount;
+            orderBook[side].splice(i, 1);
+            i--;
+
+            // Break if there is no next order on the book, or
+            //      the next order isn't at the price we are interested in
+            if (i + 1 == orderBook[side].length || orderBook[side][i + 1].price != data.price)
+                break;
+
+
+        }
+
+    }
+
+    // If a bid is set, resrve 'amount * price' worth of dollars
+    // If an ask is set, reserve 'amount' worth of ETH
+    let change = side == 0 ? amountRemoved * data.price : amountRemoved;
+
+    let reserved = side == 0 ? 'reservedUSD' : 'reservedETH';
+
+    //--------------------------------2--------------------------------
+    let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${change} WHERE "id" = ${data.user.id}`;
+    await db.query(updateUserBalance);
+
+    //--------------------------------3--------------------------------
+    let removeFully = true;
+    let userClicked = true;
+    io.emit('removeOrder', { price: data.price, amount: amountRemoved, OB: orderBook, side, id: data.user.id, removeFully, userClicked })
+    console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
 }
 
 

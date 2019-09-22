@@ -24,6 +24,7 @@ socket.on('transmitOB', (data) => {
 
 export function order(action, amount, price, market) {
 
+
     let orderType = action == 'buy' ? 0 : 1;
 
 
@@ -62,14 +63,110 @@ socket.on('addOrder', (data) => {
     }
     else {
         let children = $(`#${data.type} tbody`).children();
-        $(children[matchingPriceAmount.index]).children()[1].innerText = Number(matchingPriceAmount.amount) + Number(data.order.amount);
+        $(children[matchingPriceAmount.index]).children()[1].innerText = Math.round((Number(matchingPriceAmount.amount) + Number(data.order.amount)) * 10000000) / 10000000;
 
     }
+
+    console.log(data.OB)
 
     OB = data.OB;
     findOwnOrders();
 
 });
+
+socket.on('removeOrder', (data) => {
+    OB = data.OB;
+    let side = data.side == 0 ? 'bid' : 'ask';
+    let rows = $($(`#${side}`).children()[0]).children()
+
+    for (let i = 1; i < rows.length; i++) {
+        let rowPrice = $(rows[i]).children()[0].innerText;
+        if (rowPrice == data.price) {
+
+            // Hide 'removal' -button from client side, if needed
+            if (user.id == data.id && data.removeFully) {
+                $($(rows[i]).children()[2]).removeClass('order-remove-visible').addClass('order-remove-invisible');
+                findOwnOrders();
+            }
+
+            // If a certain price has multiple orders from multiple users, just update the amount
+            if (Number($(rows[i]).children()[1].innerText) > data.amount)
+                $(rows[i]).children()[1].innerText -= data.amount;
+
+            // If not, remove the whole row-element
+            else
+                $(rows[i]).remove()
+
+            break;
+        }
+    }
+
+    if (data.userClicked && data.id == user.id && side == 'bid') {
+        user.availableUSD += data.price * data.amount;
+
+        document.getElementById('usdAvailable').innerText = `USD available: ${user.availableUSD}`
+
+    }
+    if (data.userClicked && data.id == user.id && side == 'ask') {
+        user.availableETH += data.amount;
+        document.getElementById('ethAvailable').innerText = `ETH available: ${user.availableETH}`
+    }
+});
+
+
+document.addEventListener('click', () => {
+    if (event.target.classList[0] == 'order-remove-visible') {
+        let clickedRow = $(event.target.parentNode);
+        let price = Number(clickedRow.children()[0].innerText);
+        let side = $(clickedRow.parent()).parent().attr('id');
+
+
+        socket.emit('order', { task: 'removeOrder', price, side, user })
+    }
+
+
+    // Disable 'price' -input field if 'market' orders are chosen
+    if (event.target.id == 'market-limit') {
+        //document.getElementById('price').disabled = document.getElementById('price').disabled ? false : true;
+        document.getElementById('price').classList.toggle('disabled');
+
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function matchingPrices(side, price) {
