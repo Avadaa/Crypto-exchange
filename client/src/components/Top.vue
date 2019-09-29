@@ -7,7 +7,7 @@
       </div>
       <div class="logo" id="userInfo" v-if="this.$store.state.isUserLoggedIn" @click="openNclose()">
         <img id="settingsIcon" src="../assets/pics/settings.png" height="30" width="30" />
-        <img src="../assets/pics/logo.png" height="50" width="50" draggable="false" />
+        <img id="avatar-img" src="../assets/pics/logo.png" height="50" width="50" draggable="false" />
         <div>
           <p class="user">{{$store.state.user.username}}</p>
           <p class="user" id="ethAvailable"></p>
@@ -90,7 +90,19 @@ export default {
       }
     }
   },
-  created() {}
+  async created() {
+    let avatarGet = await auth.getAvatar({
+      userId: this.$store.state.user.userId
+    });
+    document.getElementById("avatar-img").src = avatarGet.data[0].avatar;
+    localStorage.setItem("avatar", avatarGet.data[0].avatar);
+  },
+  mounted() {
+    if (this.$store.state.isUserLoggedIn)
+      document.getElementById("avatar-img").src = localStorage.getItem(
+        "avatar"
+      );
+  }
 };
 </script>
 

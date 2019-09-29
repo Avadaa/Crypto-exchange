@@ -28,7 +28,7 @@ export default new Vuex.Store({
             state.user.username = user.username;
             state.user.userId = user.userId;
             state.user.address = user.address;
-        },
+        }
 
     },
     actions: {
@@ -49,7 +49,6 @@ export default new Vuex.Store({
 
             commit('setUser', User);
         },
-
         // Fetch user information from browser's storage and store it to state variable
         getLocalUser({ commit }) {
             let localStorageUser = {

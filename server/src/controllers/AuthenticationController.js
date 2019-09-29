@@ -20,11 +20,6 @@ module.exports = {
         let userInfoQuery = `SELECT * FROM users WHERE id = '${req.body.userId}'`
         let userWalletInfo = await db.query(userInfoQuery)
 
-        //let depositQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`
-        //let deposits = await db.query(depositQuery);
-
-        //let withdrawQuery = `SELECT hash, date, amount FROM withdraws WHERE "userId" = '${req.body.userId}'`
-        //let withdraws = await db.query(withdrawQuery);
 
         res.send({
             balance: {
@@ -33,9 +28,6 @@ module.exports = {
                 reservedETH: userWalletInfo[0].reservedETH,
                 reservedUSD: userWalletInfo[0].reservedUSD
             }
-            //deposits,
-            //withdraws
-
         })
     },
 
@@ -116,7 +108,7 @@ module.exports = {
     },
 
     async depositHistory(req, res) {
-        let historyQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`
+        let historyQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`;
         let depositHistory = (await db.query(historyQuery));
 
         res.send(depositHistory);
@@ -124,7 +116,7 @@ module.exports = {
 
     },
     async withdrawHistory(req, res) {
-        let historyQuery = `SELECT hash, date, amount FROM withdraws WHERE "userId" = '${req.body.userId}'`
+        let historyQuery = `SELECT hash, date, amount FROM withdraws WHERE "userId" = '${req.body.userId}'`;
         let withdrawHistory = (await db.query(historyQuery));
 
         res.send(withdrawHistory);
@@ -133,5 +125,16 @@ module.exports = {
     obInfo(req, res) {
         let obInfo = Trade.obInfo();
         res.send(obInfo);
+    },
+    async uploadAvatar(req, res) {
+        let avatarQuery = `UPDATE users SET avatar = '${req.body.avatar}' WHERE id = ${req.body.userId}`;
+        (res.send(await db.query(avatarQuery)));
+
+        //console.log(req.body);
+    },
+
+    async getAvatar(req, res) {
+        let avatarQuery = `SELECT avatar FROM users WHERE id = ${req.body.userId}`;
+        res.send(await db.query(avatarQuery));
     }
 }

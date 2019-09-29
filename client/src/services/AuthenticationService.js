@@ -26,5 +26,11 @@ export default {
     obInfo() {
         return Api().post('api/obinfo');
     },
+    uploadAvatar(avatarInfo) {
+        return Api().post('upload/avatar', avatarInfo);
+    },
+    getAvatar(userId) {
+        return Api().post('api/avatar', userId);
+    }
 
 }

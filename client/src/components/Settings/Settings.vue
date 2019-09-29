@@ -1,18 +1,13 @@
 <template>
   <div id="settings" class="hidden">
     <div id="panel">
-      <img src="../../assets/pics/logo.png" height="150" width="150" />
+      <img id="user-avatar-preview" src="../../assets/pics/logo.png" height="150" width="150" />
       <div id="upload">
         <p>Upload your new avatar</p>
-        <vue-dropzone
-          ref="myVueDropzone"
-          id="dropzone"
-          :options="dropzoneOptions"
-          @vdropzone-complete="afterComplete"
-        ></vue-dropzone>
+        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
         <br />
-        <button>Upload</button>
-        <p>Maximum file size 5MB</p>
+        <button id="upload-btn" v-on:click="send();">Upload</button>
+        <p>Maximum file size 2MB</p>
       </div>
       <div></div>
     </div>
@@ -22,6 +17,8 @@
 <script>
 import vue2Dropzone from "vue2-dropzone";
 import "vue2-dropzone/dist/vue2Dropzone.min.css";
+import auth from "../../services/AuthenticationService.js";
+
 export default {
   name: "settings",
   components: {
@@ -38,23 +35,44 @@ export default {
         resizeWidth: 50,
         resizeHeight: 50,
         resizeMethod: "contain",
-        maxFilesize: 5,
+        maxFilesize: 2,
         maxfiles: 1,
+        addRemoveLinks: true,
         init: function() {
           this.on("addedfile", function(file) {
             if (this.files.length > 1) {
               this.removeFile(this.files[0]);
             }
           });
+        },
+        headers: {
+          "Cache-Control": ""
         }
       }
     };
   },
 
   methods: {
-    afterComplete(file) {
-      console.log(file);
+    async send() {
+      let file = $("#dropzone")
+        .get(0)
+        .dropzone.getAcceptedFiles();
+
+      if (file.length > 0) {
+        let avatarPost = await auth.uploadAvatar({
+          userId: this.$store.state.user.userId,
+          avatar: file[0].dataURL
+        });
+        localStorage.setItem("avatar", file[0].dataURL);
+        document.getElementById("user-avatar-preview").src = file[0].dataURL;
+        document.getElementById("avatar-img").src = file[0].dataURL;
+      }
     }
+  },
+  mounted() {
+    document.getElementById("user-avatar-preview").src = localStorage.getItem(
+      "avatar"
+    );
   }
 };
 </script>

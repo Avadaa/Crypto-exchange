@@ -25,7 +25,6 @@ let processing = false;
 let executing = false;
 
 io.on('connect', async (socket) => {
-    console.log(io.engine.clientsCount)
 
 
     setTimeout(() => {

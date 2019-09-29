@@ -23,6 +23,8 @@ module.exports = (app) => {
     app.post('/api/user/deposithistory', AuthenticationController.depositHistory);
     app.post('/api/user/withdrawhistory', AuthenticationController.withdrawHistory);
     app.post('/api/obinfo', AuthenticationController.obInfo);
+    app.post('/upload/avatar', AuthenticationController.uploadAvatar);
+    app.post('/api/avatar', AuthenticationController.getAvatar);
 
 
 }

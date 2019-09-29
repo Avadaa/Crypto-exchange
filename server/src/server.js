@@ -19,9 +19,19 @@ const db = require('knex')(require('../config/database'));
 const session = require('express-session');
 
 // Set Body Parser ready for use
-const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+let bodyParser = require('body-parser');
+
+/*
+bodyParser = {
+    json: { limit: '50mb', extended: true },
+    urlencoded: { limit: '50mb', extended: true }
+};
+*/
+
+
+app.use(bodyParser.json({ limit: '50mb', extended: true }));
+app.use(bodyParser.urlencoded({ limit: '5mb', extended: false }));
+//app.use(bodyParser.json());
 
 
 // CORS middleware
@@ -36,10 +46,13 @@ app.use(allowCrossDomain)
 
 
 
+
 let server = app.listen(process.env.PORT || 3000, () => {
     console.log('server running');
 
 });
+
+
 
 
 
