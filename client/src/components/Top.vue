@@ -94,11 +94,16 @@ export default {
     let avatarGet = await auth.getAvatar({
       userId: this.$store.state.user.userId
     });
-    document.getElementById("avatar-img").src = avatarGet.data[0].avatar;
-    localStorage.setItem("avatar", avatarGet.data[0].avatar);
+    if (avatarGet.data[0].avatar != null) {
+      document.getElementById("avatar-img").src = avatarGet.data[0].avatar;
+      localStorage.setItem("avatar", avatarGet.data[0].avatar);
+    }
   },
   mounted() {
-    if (this.$store.state.isUserLoggedIn)
+    if (
+      this.$store.state.isUserLoggedIn &&
+      localStorage.getItem("avatar") != "null"
+    )
       document.getElementById("avatar-img").src = localStorage.getItem(
         "avatar"
       );
