@@ -377,12 +377,8 @@ async function marketOrder(data) {
         }
     }
 
-
-
-
     processing = false;
 }
-
 
 
 // The server side order book shows every single user's submissions, but the client side one 
@@ -450,25 +446,8 @@ function OBthickness() {
     return thickness;
 }
 
-
-
-
-
-
-
 module.exports = {
     obInfo() {
         return ({ OB: orderBook, OBcompressed: compactOB(), currentPrice });
     }
 }
-
-
-
-
-
-
-
-
-
-
-

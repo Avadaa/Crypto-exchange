@@ -213,40 +213,6 @@ document.addEventListener('click', () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function matchingPrices(side, price) {
     let children = $(`#${side} tbody`).children();
     for (let i = 1; i < children.length; i++) {
@@ -275,10 +241,7 @@ export function findOwnOrders() {
             if (prices[i].includes(price))
                 $($(bookEles[i][j]).children()[2]).removeClass('order-remove-invisible').addClass('order-remove-visible');
         }
-
-
 }
-
 
 export async function receiveUserInfo(data) {
 
@@ -288,28 +251,4 @@ export async function receiveUserInfo(data) {
     user.id = user.userId
     user.availableUSD = user.balanceUSD - user.reservedUSD;
     user.availableETH = user.balanceETH - user.reservedETH;
-
-
-
 }
-
-
-
-
-
-
-
-
-/*
-io.emit('addOrder', {
-    order: {
-        price: OBobject.price,
-        amount: OBobject.amount
-    },
-    index: index,
-    type: emitType,
-    OB: orderBook,
-    userID: OBobject.id
-});
-
-*/

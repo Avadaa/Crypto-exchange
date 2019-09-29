@@ -1,12 +1,19 @@
 <template>
   <div id="top">
     <div style="display: flex; align-items: center;">
-      <img src="../assets/pics/logo.png" height="50" width="50" />
-      <div v-if="!this.$store.state.isUserLoggedIn">EzGains Exchange</div>
-      <div v-if="this.$store.state.isUserLoggedIn">
-        <p class="user">{{$store.state.user.username}}</p>
-        <p class="user" id="ethAvailable"></p>
-        <p class="user" id="usdAvailable"></p>
+      <div class="logo" v-if="!this.$store.state.isUserLoggedIn">
+        <img src="../assets/pics/logo.png" height="50" width="50" />
+        EzGains Exchange
+      </div>
+      <div class="logo" id="userInfo" v-if="this.$store.state.isUserLoggedIn" @click="openNclose()">
+        <img id="settingsIcon" src="../assets/pics/settings.png" height="30" width="30" />
+        <img src="../assets/pics/logo.png" height="50" width="50" draggable="false" />
+        <div>
+          <p class="user">{{$store.state.user.username}}</p>
+          <p class="user" id="ethAvailable"></p>
+          <p class="user" id="usdAvailable"></p>
+        </div>
+        <Settings id="settings" />
       </div>
     </div>
 
@@ -49,11 +56,16 @@
 <script>
 import router from "../router/index";
 import auth from "../services/AuthenticationService";
+import Settings from "./Settings/Settings";
 import { async } from "q";
+
+global.jQuery = require("jquery");
+let $ = global.jQuery;
+window.$ = $;
 
 export default {
   name: "top",
-  components: {},
+  components: { Settings },
   data() {
     return {};
   },
@@ -63,13 +75,33 @@ export default {
       this.$store.dispatch("setToken");
 
       localStorage.clear();
+
       this.$router.push("/");
+    },
+    openNclose() {
+      if (
+        ($(event.target).is("#settings") &&
+          !$("#settings").hasClass("hidden")) ||
+        (!$(event.target).is("#userInfo") &&
+          !$("#settings").hasClass("visible"))
+      ) {
+        document.getElementById("settings").classList.toggle("hidden");
+        document.getElementById("settings").classList.toggle("visible");
+      }
     }
-  }
+  },
+  created() {}
 };
 </script>
 
 <style scoped lang="scss">
+#top,
+.logo,
+#userInfo {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
 #top {
   background: #1b2931;
   color: white;
@@ -77,9 +109,25 @@ export default {
   width: 100vw;
   margin-left: -8px;
 
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  #userInfo {
+    #settingsIcon {
+      position: absolute;
+      display: none;
+    }
+
+    &:hover {
+      #settingsIcon {
+        display: initial;
+      }
+
+      *:not(#settingsIcon) {
+        *:not(#settings) {
+          filter: blur(1px);
+        }
+        user-select: none;
+      }
+    }
+  }
 
   img {
     margin-right: 10px;
@@ -129,3 +177,26 @@ export default {
   }
 }
 </style>
+
+
+
+/*
+if (
+  !$(event.target).is("#userInfo") &&
+  !$("#settings").hasClass("visible")
+) {
+  console.log("open");
+
+  document.getElementById("settings").classList.toggle("hidden");
+  document.getElementById("settings").classList.toggle("visible");
+}
+
+if (
+  $(event.target).is("#settings") &&
+  !$("#settings").hasClass("hidden")
+) {
+  console.log("close");
+  document.getElementById("settings").classList.toggle("hidden");
+  document.getElementById("settings").classList.toggle("visible");
+}
+*/
