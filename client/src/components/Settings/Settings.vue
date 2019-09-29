@@ -70,11 +70,12 @@ export default {
     }
   },
   mounted() {
-    if (localStorage.getItem("avatar") != "null") {
-      document.getElementById("user-avatar-preview").src = localStorage.getItem(
-        "avatar"
-      );
-    }
+    setTimeout(() => {
+      if (localStorage.getItem("avatar") != "null")
+        document.getElementById(
+          "user-avatar-preview"
+        ).src = localStorage.getItem("avatar");
+    }, 200);
   }
 };
 </script>

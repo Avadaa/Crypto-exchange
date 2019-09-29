@@ -43,6 +43,15 @@ export default {
       else {
         this.$store.dispatch("setToken", res.data.token);
         this.$store.dispatch("setUser", res.data.user);
+
+        let avatarGet = await auth.getAvatar({
+          userId: this.$store.state.user.userId
+        });
+        if (avatarGet.data[0].avatar != null) {
+          document.getElementById("avatar-img").src = avatarGet.data[0].avatar;
+          localStorage.setItem("avatar", avatarGet.data[0].avatar);
+        }
+
         router.push("trade");
       }
     }
