@@ -71,7 +71,10 @@ export default {
   },
   mounted() {
     setTimeout(() => {
-      if (localStorage.getItem("avatar") != "null")
+      if (
+        localStorage.getItem("avatar") != "null" &&
+        localStorage.getItem("avatar") != null
+      )
         document.getElementById(
           "user-avatar-preview"
         ).src = localStorage.getItem("avatar");

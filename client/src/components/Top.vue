@@ -93,7 +93,8 @@ export default {
   mounted() {
     if (
       this.$store.state.isUserLoggedIn &&
-      localStorage.getItem("avatar") != "null"
+      localStorage.getItem("avatar") != "null" &&
+      localStorage.getItem("avatar") != null
     ) {
       document.getElementById("avatar-img").src = localStorage.getItem(
         "avatar"
