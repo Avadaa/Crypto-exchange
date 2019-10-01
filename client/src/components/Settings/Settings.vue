@@ -131,6 +131,8 @@ export default {
       background: rgb(55, 149, 255);
       border: 1px solid white;
 
+      font-size: 1.6em;
+
       &:hover {
         border: 2px solid white;
       }

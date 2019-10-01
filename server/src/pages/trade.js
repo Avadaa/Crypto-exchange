@@ -352,6 +352,7 @@ async function marketOrder(data) {
                 id: marketSide.id,
                 currentPrice,
                 OB: orderBook
+
             });
             io.emit('marketOrder', {
                 balanceETH: limitSide.balanceETH,
@@ -362,6 +363,12 @@ async function marketOrder(data) {
                 currentPrice,
                 OB: orderBook
             });
+
+            io.emit('historyInfo', {
+                amount: change,
+                price: currentPrice,
+                side: OBside
+            })
 
 
 

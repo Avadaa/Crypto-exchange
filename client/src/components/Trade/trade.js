@@ -48,40 +48,44 @@ export function order(action, amount, price, market) {
 
 
 socket.on('addOrder', async (data) => {
-    let matchingPriceAmount = matchingPrices(data.type, data.order.price);
+    console.log(data.order.amount)
+    if (data.order.amount > 0) {
+        let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
-    if (data.type == 'bid') {
-        if (data.userID == user.id) {
-            user.availableUSD -= data.order.price * data.order.amount;
-            document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
+        if (data.type == 'bid') {
+            if (data.userID == user.id) {
+                user.availableUSD -= data.order.price * data.order.amount;
+                document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
+            }
+
+
+        }
+        if (data.userID == user.id && data.type == 'ask') {
+
+            user.availableETH -= data.order.amount;
+            document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
+        }
+
+        if (matchingPriceAmount == false) {
+            let html = `<tr><td class="order-price">${data.order.price}</td><td class="order-amount">${data.order.amount}</td><td class="order-remove-invisible">X</td></tr>`
+            $(`#${data.type} tbody > tr:eq(${data.index})`).after(html)
+        }
+        else {
+            let children = $(`#${data.type} tbody`).children();
+            $(children[matchingPriceAmount.index]).children()[1].innerText = Math.round((Number(matchingPriceAmount.amount) + Number(data.order.amount)) * 10000000) / 10000000;
+
         }
 
 
-    }
-    if (data.userID == user.id && data.type == 'ask') {
-
-        user.availableETH -= data.order.amount;
-        document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
-    }
-
-    if (matchingPriceAmount == false) {
-        let html = `<tr><td class="order-price">${data.order.price}</td><td class="order-amount">${data.order.amount}</td><td class="order-remove-invisible">X</td></tr>`
-        $(`#${data.type} tbody > tr:eq(${data.index})`).after(html)
-    }
-    else {
-        let children = $(`#${data.type} tbody`).children();
-        $(children[matchingPriceAmount.index]).children()[1].innerText = Math.round((Number(matchingPriceAmount.amount) + Number(data.order.amount)) * 10000000) / 10000000;
+        OB = data.OB;
+        findOwnOrders();
 
     }
 
-
-    OB = data.OB;
-    findOwnOrders();
 
 });
 
 socket.on('removeOrder', async (data) => {
-
     OB = data.OB;
     let side = data.side == 0 ? 'bid' : 'ask';
     let rows = $($(`#${side}`).children()[0]).children()
@@ -120,6 +124,9 @@ socket.on('removeOrder', async (data) => {
     }
 
 
+
+
+
 });
 
 socket.on('marketOrder', async (data) => {
@@ -139,6 +146,21 @@ socket.on('marketOrder', async (data) => {
 
     }
 });
+
+socket.on('historyInfo', (data) => {
+    data.amount = Math.round(data.amount * 10000000) / 10000000;
+    if (data.amount > 0) {
+
+        let classSide = data.side == 0 ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
+        let time = new Date();
+        let timeStamp = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+        let html = `<tr style="${classSide}"><td>${timeStamp}</td><td>${data.price}</td><td>${data.amount}</td></tr>`
+        $(`#historyTbody tr:last`).after(html);
+
+        var scrollLocker = document.querySelector('#history');
+        scrollLocker.scrollTop = scrollLocker.scrollHeight - scrollLocker.clientHeight;
+    }
+})
 
 //Order book ask side (price, amount):
 //                       5       1

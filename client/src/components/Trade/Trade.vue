@@ -28,6 +28,7 @@
             <tr v-for="(line) in orderBook[1]">
               <td>{{line.price}}</td>
               <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
+
               <td class="order-remove-invisible">X</td>
             </tr>
           </tbody>
@@ -50,6 +51,18 @@
           </tbody>
         </table>
       </div>
+    </div>
+    <div id="history">
+      <table>
+        <tbody id="historyTbody">
+          <tr>
+            <th class="title">Time</th>
+            <th class="title">Price</th>
+            <th class="title">Amount</th>
+          </tr>
+          <tr></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -189,23 +202,14 @@ export default {
     }
   }
 
-  #orderbooks {
+  #orderbooks,
+  #history {
     width: 400px;
+    height: 604px;
     border: 2px solid white;
     margin-left: 100px;
     margin-top: 20px;
     text-align: center;
-
-    #askDiv {
-      overflow: auto;
-
-      border: 2px solid rgb(255, 164, 164);
-    }
-    #bidDiv {
-      overflow: auto;
-
-      border: 2px solid rgb(164, 255, 164);
-    }
 
     table {
       tbody {
@@ -224,6 +228,24 @@ export default {
       background: #2f3d45;
     }
   }
+
+  #orderbooks {
+    #askDiv {
+      overflow: auto;
+
+      border: 2px solid rgb(255, 164, 164);
+    }
+    #bidDiv {
+      overflow: auto;
+
+      border: 2px solid rgb(164, 255, 164);
+    }
+  }
+
+  #history {
+    overflow: auto;
+  }
+
   .sides {
     height: 30vh;
   }
