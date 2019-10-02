@@ -6,8 +6,7 @@ const Tx = require('ethereumjs-tx');
 
 const ethConfig = require('../../config/ethereum');
 
-const coldWalletAddress = '0xaA0a9375530850be62B6171CdB8dA1E41E195a9e';
-const coldWalletPk = '0x0693cc9fad552e48bc8b172e63e56052ce12b952c514e7fe20adb43758d93587';
+const coldWalletAddress = '0x18dbB4B44a5a65eeABf44372C22c4cc708dfb16F';
 
 module.exports = {
 
@@ -27,6 +26,9 @@ module.exports = {
         let timeDifference = withdraws.length > 0 ? new Date() - Date.parse(withdraws[withdraws.length - 1].date) : cooldownPlusOne;
 
         if (timeDifference > ethConfig.cooldown) {
+
+            let pkQuery = "SELECT * FROM coldwallet";
+            let coldWalletPk = (await db.query(pkQuery))[0].pk;
 
             let amountWei = web3.toWei(amount, 'ether');
             let gasLimit = ethConfig.gasLimit;
