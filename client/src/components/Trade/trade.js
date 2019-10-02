@@ -38,17 +38,17 @@ export function order(action, amount, price, market) {
                 socket.emit('order', { task: 'addOrder', amount, price, user, orderType });
 
         }
-
-    if (market && amount > 0 && (OB[1][0] && action == 'buy') || (OB[0][0] && action == 'sell'))
-        if (action == 'buy' && (OB[1][0].price * amount <= user.availableUSD) || (action == 'sell' && amount <= user.availableETH))
+    if (market && amount > 0 && ((OB[1][0] && action == 'buy') || (OB[0][0] && action == 'sell')))
+        if (action == 'buy' && (OB[1][0].price * amount <= user.availableUSD) || (action == 'sell' && amount <= user.availableETH)) {
             socket.emit('order', { task: 'marketOrder', amount, price: -1, user, orderType });
+
+        }
 
 
 }
 
 
 socket.on('addOrder', async (data) => {
-    console.log(data.order.amount)
     if (data.order.amount > 0) {
         let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
@@ -154,7 +154,7 @@ socket.on('historyInfo', (data) => {
         let classSide = data.side == 0 ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
         let time = new Date();
         let timeStamp = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
-        let html = `<tr style="${classSide}"><td>${timeStamp}</td><td>${data.price}</td><td>${data.amount}</td></tr>`
+        let html = `<tr style="${classSide}"><td style="font-size: 0.75em;">${timeStamp}</td><td>${data.price}</td><td>${data.amount}</td></tr>`
         $(`#historyTbody tr:last`).after(html);
 
         var scrollLocker = document.querySelector('#history');
@@ -172,7 +172,7 @@ socket.on('historyInfo', (data) => {
 //      after that a 1 coin limit bid would be placed at $4
 function limitAsMarket(amount, price, orderType) {
     let OBside = orderType == 0 ? 1 : 0;
-
+    console.log('asd')
 
     let amountBetween = 0;
     let marketPrice = price;

@@ -205,7 +205,6 @@ export default {
   #orderbooks,
   #history {
     width: 400px;
-    height: 604px;
     border: 2px solid white;
     margin-left: 100px;
     margin-top: 20px;
@@ -243,6 +242,7 @@ export default {
   }
 
   #history {
+    height: calc(30vh + 30vh + 42px);
     overflow: auto;
   }
 
