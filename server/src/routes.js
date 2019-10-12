@@ -25,6 +25,7 @@ module.exports = (app) => {
     app.post('/api/obinfo', AuthenticationController.obInfo);
     app.post('/upload/avatar', AuthenticationController.uploadAvatar);
     app.post('/api/avatar', AuthenticationController.getAvatar);
+    app.post('/api/user/history', AuthenticationController.getHistory);
 
 
 }

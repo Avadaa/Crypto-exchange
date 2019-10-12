@@ -31,6 +31,9 @@ export default {
     },
     getAvatar(userId) {
         return Api().post('api/avatar', userId);
+    },
+    history(userId) {
+        return Api().post('api/user/history', userId);
     }
 
 }

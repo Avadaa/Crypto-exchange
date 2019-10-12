@@ -168,7 +168,7 @@ async function addOrder(data) {
             let timeStamp = `${time.getDay()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
 
             let buySell = emitType == 'bid' ? 'buy' : 'sell';
-            let historyQuery = `INSERT INTO history("userId", "filled", "time", "buy/sell", "type", "status", "fill price") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}') RETURNING id`;
+            let historyQuery = `INSERT INTO history("userId", "filled", "time", "buy/sell", "type", "status", "price") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}') RETURNING id`;
             let historyId = await db.query(historyQuery);
 
             // Adding an order id to the books 
@@ -204,17 +204,20 @@ async function addOrder(data) {
 // Delete all instances on the same price made by the same user
 // 1. Calculate how much the user has as orders on the same price
 // 2. Deduct from 'reserved balance' in database
-// 3. Emit changes to client side
+// 3. Edit history -rows in database
+// 4. Emit changes to client side
 async function removeOrder(data) {
 
     //--------------------------------1--------------------------------
     let amountRemoved = 0;
+    let removedOrderIds = [];
 
     let side = data.side == 'bid' ? 0 : 1;
     for (let i = 0; i < orderBook[side].length; i++) {
         let obRow = orderBook[side][i];
         if (obRow.price == data.price && obRow.id == data.user.id) {
             amountRemoved += obRow.amount;
+            removedOrderIds.push(obRow.orderId);
             orderBook[side].splice(i, 1);
             i--;
 
@@ -222,10 +225,7 @@ async function removeOrder(data) {
             //      the next order isn't at the price we are interested in
             if (i + 1 == orderBook[side].length || orderBook[side][i + 1].price != data.price)
                 break;
-
-
         }
-
     }
 
     // If a bid is set, resrve 'amount * price' worth of dollars
@@ -240,6 +240,13 @@ async function removeOrder(data) {
 
 
     //--------------------------------3--------------------------------
+
+    for (let i = 0; i < removedOrderIds.length; i++) {
+        let updateHistoryQuery = `UPDATE history SET "status" = 'cancelled' WHERE "id" = ${removedOrderIds[i]}`
+        await db.query(updateHistoryQuery);
+    }
+
+    //--------------------------------4--------------------------------
     let removeFully = true;
     let userClicked = true;
     io.emit('removeOrder', {
@@ -249,6 +256,7 @@ async function removeOrder(data) {
             data.user.id,
         removeFully,
         userClicked,
+        orderIds: removedOrderIds
     })
     console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
 }

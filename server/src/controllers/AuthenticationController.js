@@ -136,5 +136,13 @@ module.exports = {
     async getAvatar(req, res) {
         let avatarQuery = `SELECT avatar FROM users WHERE id = ${req.body.userId}`;
         res.send(await db.query(avatarQuery));
+    },
+
+    async getHistory(req, res) {
+        let historyQuery = `SELECT * FROM history WHERE "userId" = '${req.body.userId}'`;
+        let orderHistory = await db.query(historyQuery);
+
+        // Sending only the last 100 orders
+        res.send(orderHistory.slice(0, 100));
     }
 }

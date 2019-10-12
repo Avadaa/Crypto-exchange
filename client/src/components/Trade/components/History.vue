@@ -20,20 +20,25 @@
 
 <script>
 import auth from "../../../services/AuthenticationService.js";
-import {} from "../trade";
+import { drawHistory } from "../trade";
 
 export default {
   name: "History",
   components: {},
   data() {
-    return {};
+    return {
+      trade: null
+    };
   },
-  methods: {
-    dd() {
-      console.log("dd");
-    }
+  methods: {},
+  async created() {
+    this.trade = require("../trade");
+
+    let orderHistory = await auth.history({
+      userId: this.$store.state.user.userId
+    });
+    this.trade.drawHistory(orderHistory.data);
   },
-  async created() {},
   async mounted() {}
 };
 </script>
