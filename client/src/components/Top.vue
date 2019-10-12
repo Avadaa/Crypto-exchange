@@ -144,6 +144,7 @@ export default {
 
   img {
     margin-right: 10px;
+    border-radius: 20px;
   }
 
   .user {

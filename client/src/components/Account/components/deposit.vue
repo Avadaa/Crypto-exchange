@@ -6,6 +6,7 @@
         <img
           src="https://chart.googleapis.com/chart?cht=qr&chl=0xef99ec41d04fbB041eDFEDf83bcBBdEB32cF4366&chs=180x180&choe=UTF-8&chld=L|2"
           alt="Deposit address QR code"
+          draggable="false"
         />
         <p>
           <a
@@ -76,6 +77,9 @@ export default {
       p,
       img {
         margin-left: 70px;
+      }
+      img {
+        user-select: none;
       }
     }
   }
