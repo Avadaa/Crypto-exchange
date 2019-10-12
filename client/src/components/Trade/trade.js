@@ -79,6 +79,7 @@ socket.on('addOrder', async (data) => {
 
         OB = data.OB;
         findOwnOrders();
+        addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId });
 
     }
 
@@ -147,6 +148,7 @@ socket.on('marketOrder', async (data) => {
     }
 });
 
+// Add new entry on local history
 socket.on('historyInfo', (data) => {
     data.amount = Math.round(data.amount * 10000000) / 10000000;
     if (data.amount > 0) {
@@ -172,7 +174,6 @@ socket.on('historyInfo', (data) => {
 //      after that a 1 coin limit bid would be placed at $4
 function limitAsMarket(amount, price, orderType) {
     let OBside = orderType == 0 ? 1 : 0;
-    console.log('asd')
 
     let amountBetween = 0;
     let marketPrice = price;
@@ -273,4 +274,17 @@ export async function receiveUserInfo(data) {
     user.id = user.userId
     user.availableUSD = user.balanceUSD - user.reservedUSD;
     user.availableETH = user.balanceETH - user.reservedETH;
+}
+
+
+function addHistory(data) {
+    data.amount = Math.round(data.amount * 10000000) / 10000000;
+    if (data.amount > 0) {
+
+        let classSide = data.side == 0 ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
+        let side = data.side == 0 ? 'Sell' : 'Bid';
+
+        let html = `<tr id=${data.historyId}><td style="font-size: 0.65em;">${data.timeStamp}</td><td>${data.price}</td><td>${data.amount}</td><td style="${classSide}">${side}</td><td>Open</td>`
+        $('#user-history').append(html);
+    }
 }

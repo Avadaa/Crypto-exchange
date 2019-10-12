@@ -1,79 +1,83 @@
 
 <template>
   <div id="trade">
-    <div id="inputs">
-      <label for="amount">Amount</label>
-      <input type="number" name="amount" v-model="amount" autocomplete="off" id="amount" />
-      <br />
-      <label for="price">Price</label>
-      <input type="number" name="price" v-model="price" autocomplete="off" id="price" />
-      <br />
-      <label for="market">Market</label>
-      <input type="checkbox" name="market" id="market-limit" v-model="market" autocomplete="off" />
-      <br />
+    <div>
+      <div id="inputs">
+        <label for="amount">Amount</label>
+        <input type="number" name="amount" v-model="amount" autocomplete="off" id="amount" />
+        <br />
+        <label for="price">Price</label>
+        <input type="number" name="price" v-model="price" autocomplete="off" id="price" />
+        <br />
+        <label for="market">Market</label>
+        <input type="checkbox" name="market" id="market-limit" v-model="market" autocomplete="off" />
+        <br />
 
-      <button v-on:click="order('buy');" id="buy">Buy</button>
-      <button v-on:click="order('sell');" id="sell">Sell</button>
-    </div>
+        <button v-on:click="order('buy');" id="buy">Buy</button>
+        <button v-on:click="order('sell');" id="sell">Sell</button>
+      </div>
 
-    <div id="orderbooks">
-      <div id="askDiv" class="sides">
-        <table id="ask">
-          <tbody>
+      <div id="orderbooks">
+        <div id="askDiv" class="sides">
+          <table id="ask">
+            <tbody>
+              <tr>
+                <th class="title">Price</th>
+                <th class="title">Amount</th>
+                <th class="title"></th>
+              </tr>
+              <tr v-for="(line) in orderBook[1]">
+                <td>{{line.price}}</td>
+                <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
+
+                <td class="order-remove-invisible">X</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <span id="currentPrice">0</span>
+        <div id="bidDiv" class="sides">
+          <table id="bid">
+            <tbody>
+              <tr>
+                <th class="title">Price</th>
+                <th class="title">Amount</th>
+                <th class="title"></th>
+              </tr>
+              <tr v-for="(line) in orderBook[0]">
+                <td>{{line.price}}</td>
+                <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
+                <td class="order-remove-invisible">X</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="localHistory">
+        <table>
+          <tbody id="historyTbody">
             <tr>
+              <th class="title">Time</th>
               <th class="title">Price</th>
               <th class="title">Amount</th>
-              <th class="title"></th>
             </tr>
-            <tr v-for="(line) in orderBook[1]">
-              <td>{{line.price}}</td>
-              <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
-
-              <td class="order-remove-invisible">X</td>
-            </tr>
+            <tr></tr>
           </tbody>
         </table>
       </div>
-      <span id="currentPrice">0</span>
-      <div id="bidDiv" class="sides">
-        <table id="bid">
-          <tbody>
-            <tr>
-              <th class="title">Price</th>
-              <th class="title">Amount</th>
-              <th class="title"></th>
-            </tr>
-            <tr v-for="(line) in orderBook[0]">
-              <td>{{line.price}}</td>
-              <td>{{Math.round(line.amount * 10000000) / 10000000}}</td>
-              <td class="order-remove-invisible">X</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
     </div>
-    <div id="history">
-      <table>
-        <tbody id="historyTbody">
-          <tr>
-            <th class="title">Time</th>
-            <th class="title">Price</th>
-            <th class="title">Amount</th>
-          </tr>
-          <tr></tr>
-        </tbody>
-      </table>
-    </div>
+    <history />
   </div>
 </template>
 
 <script>
 import auth from "../../services/AuthenticationService.js";
 import { renderOrderBook, findOwnOrders } from "./trade";
+import history from "./components/History.vue";
 
 export default {
   name: "Trade",
-  components: {},
+  components: { history },
   data() {
     return {
       amount: "",
@@ -147,6 +151,10 @@ export default {
 <style scoped lang="scss">
 #trade {
   display: flex;
+  flex-flow: column;
+}
+#trade > div {
+  display: flex;
   //justify-content: space-around;
 
   text-align: left;
@@ -203,7 +211,7 @@ export default {
   }
 
   #orderbooks,
-  #history {
+  #localHistory {
     width: 400px;
     border: 2px solid white;
     margin-left: 100px;
@@ -241,7 +249,7 @@ export default {
     }
   }
 
-  #history {
+  #localHistory {
     height: calc(30vh + 30vh + 42px);
     overflow: auto;
   }

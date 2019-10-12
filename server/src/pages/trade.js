@@ -76,7 +76,8 @@ async function processQue(data) {
 // 2. Confirm balance
 // 3. Add a new entry to server side OB
 // 4. Update 'reserved' amount in database
-// 5. Emit to client side
+// 5. Create an entry to history table in database
+// 6. Emit to client side
 async function addOrder(data) {
     //console.log('Order ' + data.orderID + ' processing started');
 
@@ -90,6 +91,7 @@ async function addOrder(data) {
     let orderType = data.orderType; // 0 = bid, 1 = ask
 
     let index = findIndex('server', orderType, OBobject.price);
+    let serverIndex = index;
 
 
     //--------------------------------1--------------------------------
@@ -161,7 +163,19 @@ async function addOrder(data) {
 
             console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
 
-            //--------------------------------5--------------------------------         
+            //--------------------------------5--------------------------------  
+            let time = new Date();
+            let timeStamp = `${time.getDay()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+
+            let buySell = emitType == 'bid' ? 'buy' : 'sell';
+            let historyQuery = `INSERT INTO history("userId", "filled", "time", "buy/sell", "type", "status", "fill price") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}') RETURNING id`;
+            let historyId = await db.query(historyQuery);
+
+            // Adding an order id to the books 
+            // Helps quite a lot when handling the front-end side regarding user's trade history
+            orderBook[orderType][serverIndex].orderId = historyId[0].id;
+
+            //--------------------------------6--------------------------------    
             io.emit('addOrder', {
                 order: {
                     price: OBobject.price,
@@ -171,11 +185,13 @@ async function addOrder(data) {
                 type: emitType,
                 OB: orderBook,
                 userID: OBobject.id,
+                timeStamp,
+                historyId: historyId[0].id
             });
-
         }
-
     }
+
+
 
 
     processing = false;
