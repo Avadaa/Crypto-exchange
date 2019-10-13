@@ -1,4 +1,5 @@
 import io from "socket.io-client";
+import { stringify } from "querystring";
 var script = document.createElement('script');
 script.src = 'http://code.jquery.com/jquery-1.11.0.min.js';
 script.type = 'text/javascript';
@@ -292,8 +293,8 @@ function addHistory(data) {
         let classSide = data.side == 'ask' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
         let side = data.side == 'ask' ? 'Sell' : 'Buy';
 
-        let html = `<tr id="history-${data.historyId}"><td style="font-size: 0.65em;">${data.timeStamp}</td><td>${data.price}</td><td>${data.amount}</td><td style="${classSide}">${side}</td><td>Open</td>`
-        $('#user-history').append(html);
+        let html = `<tr id="history-${data.historyId}"><td style="font-size: 0.65em;">${data.timeStamp}</td><td>${data.price}</td><td>${data.amount}</td><td style="${classSide}">${side}</td><td>Untouched</td>`
+        $(`#user-history tr:first`).after(html);
     }
 }
 
@@ -307,11 +308,14 @@ function cancelInHistory(data) {
 export function drawHistory(data) {
 
     data.forEach((e) => {
+        console.log(e)
         let filled = e.filled == 0 ? '-' : e.filled;
-        let classSide = e[buy / sell] == 'sell' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
-        let side = e[buy / sell] == 'sell' ? 'Sell' : 'Buy';
+        let classSide = e.side == 'sell' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
+        let side = e.side == 'sell' ? 'Sell' : 'Buy';
+        e.status = e.status.charAt(0).toUpperCase() + e.status.slice(1);
 
-        let html = `<tr id="history-${e.id}"><td style="font-size: 0.65em;">${e.time}</td><td>${e.price}</td><td>${filled}</td><td style="${classSide}">${side}</td><td>Open</td>`
+
+        let html = `<tr id="history-${e.id}"><td style="font-size: 0.65em;">${e.time}</td><td>${e.price}</td><td>${filled}</td><td style="${classSide}">${side}</td><td>${e.status}</td>`;
         //$('#user-history').append(html);
 
         $(`#user-history tr:first`).after(html);
