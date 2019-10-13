@@ -165,7 +165,7 @@ async function addOrder(data) {
 
             //--------------------------------5--------------------------------  
             let time = new Date();
-            let timeStamp = `${time.getDay()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+            let timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
 
             let buySell = emitType == 'bid' ? 'buy' : 'sell';
             let historyQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}', '${OBobject.amount}') RETURNING id`;
