@@ -13,7 +13,7 @@ const socketIo = require('socket.io');
 const io = socketIo(http);
 
 // [[Bids],                [Asks]]
-// [[{price, amount, id}], [{price, amount, id}]]
+// [[{price, amount, id, orderId, originalAmount}], [{price, amount, id, orderId, originalAmount}]]
 let orderBook = [[], []];
 
 let currentPrice = 0;
@@ -79,7 +79,6 @@ async function processQue(data) {
 // 5. Create an entry to history table in database
 // 6. Emit to client side
 async function addOrder(data) {
-    //console.log('Order ' + data.orderID + ' processing started');
 
     processing = true;
 
@@ -171,9 +170,12 @@ async function addOrder(data) {
             let historyQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}', '${OBobject.amount}') RETURNING id`;
             let historyId = await db.query(historyQuery);
 
-            // Adding an order id to the books 
+            // Adding an order id and to the books 
             // Helps quite a lot when handling the front-end side regarding user's trade history
             orderBook[orderType][serverIndex].orderId = historyId[0].id;
+
+            // Adding original size to help keep track of the total filled amount
+            orderBook[orderType][serverIndex].originalAmount = OBobject.amount;
 
             //--------------------------------6--------------------------------    
             io.emit('addOrder', {
@@ -365,27 +367,42 @@ async function marketOrder(data) {
             limitSide = limitSide[0];
 
 
+            // Update the changed order in history-table in db
+            let orderStatus = OBrow.amount == 0 ? 'Filled' : 'Partially filled'
+            let amountFilled = OBrow.originalAmount - OBrow.amount;
+            let historyQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
+            await db.query(historyQuery);
+
+
             currentPrice = OBrow.price;
 
             // Update balance on client's screens
             io.emit('marketOrder', {
+                side: "market",
                 balanceETH: marketSide.balanceETH,
                 reservedETH: marketSide.reservedETH,
                 balanceUSD: marketSide.balanceUSD,
                 reservedUSD: marketSide.reservedUSD,
                 id: marketSide.id,
                 currentPrice,
-                OB: orderBook
+                OB: orderBook,
+                filled: amountFilled,
+                orderId: OBrow.orderId
 
             });
             io.emit('marketOrder', {
+                side: "limit",
                 balanceETH: limitSide.balanceETH,
                 reservedETH: limitSide.reservedETH,
                 balanceUSD: limitSide.balanceUSD,
                 reservedUSD: limitSide.reservedUSD,
                 id: limitSide.id,
                 currentPrice,
-                OB: orderBook
+                OB: orderBook,
+                filled: amountFilled,
+                orderId: OBrow.orderId,
+                orderStatus
+
             });
 
             io.emit('historyInfo', {

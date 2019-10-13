@@ -116,7 +116,8 @@ socket.on('removeOrder', async (data) => {
 
     if (data.id == user.id) {
 
-        cancelInHistory({ orderIds: data.orderIds });
+        if (data.userClicked)
+            cancelInHistory({ orderIds: data.orderIds });
 
         if (data.userClicked && side == 'bid') {
             user.availableUSD += data.price * data.amount;
@@ -153,6 +154,10 @@ socket.on('marketOrder', async (data) => {
         user.balanceETH = data.balanceETH;
         user.availableETH = data.balanceETH - data.reservedETH;
         document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
+
+        if (data.side == 'limit')
+            editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
+
 
     }
 });
@@ -291,15 +296,20 @@ function addHistory(data) {
     if (data.amount > 0) {
         let classSide = data.side == 'ask' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
 
-        let html = `<tr id="history-${data.historyId}" style="font-size: 0.65em;"><td>${data.timeStamp}</td><td>${data.price}</td><td>-</td><td>${data.amount}</td><td style="${classSide}">${data.type}</td><td>Untouched</td>`
+        let html = `<tr id="history-${data.historyId}" style="font-size: 0.55em;"><td>${data.timeStamp}</td><td>${data.price}</td><td>-</td><td>${data.amount}</td><td style="${classSide}">${data.type}</td><td>Untouched</td>`
         $(`#user-history tr:first`).after(html);
     }
 }
 
+function editLimitSideHistory(data) {
+    $(`#history-${data.orderId}`).children()[5].innerText = data.orderStatus;
+    $(`#history-${data.orderId}`).children()[2].innerText = data.filled;
+}
+
 function cancelInHistory(data) {
-    for (let i = 0; i < data.orderIds.length; i++) {
+    for (let i = 0; i < data.orderIds.length; i++)
         $(`#history-${data.orderIds[i]}`).children()[5].innerText = 'Cancelled';
-    }
+
 }
 
 
@@ -312,7 +322,7 @@ export function drawHistory(data) {
         e.type = e.type.charAt(0).toUpperCase() + e.type.slice(1);
 
 
-        let html = `<tr id="history-${e.id}" style="font-size: 0.65em;"><td>${e.time}</td><td>${e.price}</td><td>${filled}</td><td>${e.amount}</td><td style="${classSide}">${e.type}</td><td>${e.status}</td>`;
+        let html = `<tr id="history-${e.id}" style="font-size: 0.55em;"><td>${e.time}</td><td>${e.price}</td><td>${filled}</td><td>${e.amount}</td><td style="${classSide}">${e.type}</td><td>${e.status}</td>`;
         //$('#user-history').append(html);
 
         $(`#user-history tr:first`).after(html);

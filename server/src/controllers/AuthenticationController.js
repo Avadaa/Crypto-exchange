@@ -141,8 +141,12 @@ module.exports = {
     async getHistory(req, res) {
         let historyQuery = `SELECT * FROM history WHERE "userId" = '${req.body.userId}'`;
         let orderHistory = await db.query(historyQuery);
+        orderHistory = orderHistory.slice(0, 100);
+
+        // Db sometimes messes up the order of which the entries are stored in
+        orderHistory.sort((a, b) => a.id - b.id)
 
         // Sending only the last 100 orders
-        res.send(orderHistory.slice(0, 100));
+        res.send(orderHistory);
     }
 }
