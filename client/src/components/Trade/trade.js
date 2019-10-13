@@ -80,7 +80,7 @@ socket.on('addOrder', async (data) => {
 
         OB = data.OB;
         findOwnOrders();
-        addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId });
+        addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
 
     }
 
@@ -289,18 +289,16 @@ export async function receiveUserInfo(data) {
 function addHistory(data) {
     data.amount = Math.round(data.amount * 10000000) / 10000000;
     if (data.amount > 0) {
-        console.log(data.side)
         let classSide = data.side == 'ask' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
-        let side = data.side == 'ask' ? 'Sell' : 'Buy';
 
-        let html = `<tr id="history-${data.historyId}"><td style="font-size: 0.65em;">${data.timeStamp}</td><td>${data.price}</td><td>${data.amount}</td><td style="${classSide}">${side}</td><td>Untouched</td>`
+        let html = `<tr id="history-${data.historyId}" style="font-size: 0.65em;"><td>${data.timeStamp}</td><td>${data.price}</td><td>-</td><td>${data.amount}</td><td style="${classSide}">${data.type}</td><td>Untouched</td>`
         $(`#user-history tr:first`).after(html);
     }
 }
 
 function cancelInHistory(data) {
     for (let i = 0; i < data.orderIds.length; i++) {
-        $(`#history-${data.orderIds[i]}`).children()[4].innerText = 'Cancelled';
+        $(`#history-${data.orderIds[i]}`).children()[5].innerText = 'Cancelled';
     }
 }
 
@@ -308,14 +306,13 @@ function cancelInHistory(data) {
 export function drawHistory(data) {
 
     data.forEach((e) => {
-        console.log(e)
         let filled = e.filled == 0 ? '-' : e.filled;
         let classSide = e.side == 'sell' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
-        let side = e.side == 'sell' ? 'Sell' : 'Buy';
         e.status = e.status.charAt(0).toUpperCase() + e.status.slice(1);
+        e.type = e.type.charAt(0).toUpperCase() + e.type.slice(1);
 
 
-        let html = `<tr id="history-${e.id}"><td style="font-size: 0.65em;">${e.time}</td><td>${e.price}</td><td>${filled}</td><td style="${classSide}">${side}</td><td>${e.status}</td>`;
+        let html = `<tr id="history-${e.id}" style="font-size: 0.65em;"><td>${e.time}</td><td>${e.price}</td><td>${filled}</td><td>${e.amount}</td><td style="${classSide}">${e.type}</td><td>${e.status}</td>`;
         //$('#user-history').append(html);
 
         $(`#user-history tr:first`).after(html);

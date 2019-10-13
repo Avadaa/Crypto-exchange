@@ -8,6 +8,7 @@
             <th class="title">Time</th>
             <th class="title">Fill Price</th>
             <th class="title">Filled</th>
+            <th class="title">Amount</th>
             <th class="title">Type</th>
             <th class="title">Status</th>
           </tr>
