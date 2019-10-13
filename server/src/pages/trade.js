@@ -367,18 +367,28 @@ async function marketOrder(data) {
             limitSide = limitSide[0];
 
 
-            // Update the changed order in history-table in db
+            // Update the changed limit order in  history-table in db
             let orderStatus = OBrow.amount == 0 ? 'Filled' : 'Partially filled'
-            let amountFilled = OBrow.originalAmount - OBrow.amount;
-            let historyQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
-            await db.query(historyQuery);
+            let amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
+            let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
+            await db.query(makerHistoryQuery);
 
+            // Add an entry for the taker-side user in db
+            let time = new Date();
+            let timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+
+            let buySell = OBside == 0 ? 'sell' : 'buy';
+            let takerHistoryQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${data.user.id}', '${change}','${timeStamp}', '${buySell}', 'Market', 'Filled', '${OBrow.price}', '${change}') RETURNING id`;
+            let marketSideOrderId = await db.query(takerHistoryQuery);
+
+            // For front end colors to be right in the order history
+            buySell = buySell == 'sell' ? 'ask' : 'bid';
 
             currentPrice = OBrow.price;
 
             // Update balance on client's screens
             io.emit('marketOrder', {
-                side: "market",
+                type: "market",
                 balanceETH: marketSide.balanceETH,
                 reservedETH: marketSide.reservedETH,
                 balanceUSD: marketSide.balanceUSD,
@@ -386,12 +396,15 @@ async function marketOrder(data) {
                 id: marketSide.id,
                 currentPrice,
                 OB: orderBook,
-                filled: amountFilled,
-                orderId: OBrow.orderId
+                amount: change,
+                orderId: marketSideOrderId[0].id,
+                side: buySell,
+                timeStamp
+
 
             });
             io.emit('marketOrder', {
-                side: "limit",
+                type: "limit",
                 balanceETH: limitSide.balanceETH,
                 reservedETH: limitSide.reservedETH,
                 balanceUSD: limitSide.balanceUSD,

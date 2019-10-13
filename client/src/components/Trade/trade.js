@@ -79,8 +79,10 @@ socket.on('addOrder', async (data) => {
 
 
         OB = data.OB;
+        console.log(user.id + '   ' + data.userID)
         findOwnOrders();
-        addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
+        if (data.userID == user.id)
+            addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
 
     }
 
@@ -155,8 +157,12 @@ socket.on('marketOrder', async (data) => {
         user.availableETH = data.balanceETH - data.reservedETH;
         document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
 
-        if (data.side == 'limit')
+        if (data.type == 'limit')
             editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
+
+        if (data.type == 'market')
+            addHistory({ price: data.currentPrice, amount: data.amount, side: data.side, timeStamp: data.timeStamp, historyId: data.orderId, type: 'Market' });
+
 
 
     }
@@ -171,7 +177,7 @@ socket.on('historyInfo', (data) => {
         let time = new Date();
         let timeStamp = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
         let html = `<tr style="${classSide}"><td style="font-size: 0.75em;">${timeStamp}</td><td>${data.price}</td><td>${data.amount}</td></tr>`
-        $(`#historyTbody tr:last`).after(html);
+        $(`#historyTbody tr:first`).after(html);
 
         var scrollLocker = document.querySelector('#history');
         scrollLocker.scrollTop = scrollLocker.scrollHeight - scrollLocker.clientHeight;
@@ -294,12 +300,17 @@ export async function receiveUserInfo(data) {
 function addHistory(data) {
     data.amount = Math.round(data.amount * 10000000) / 10000000;
     if (data.amount > 0) {
-        let classSide = data.side == 'ask' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
+        let classSide;
+        classSide = data.side == 'ask' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
 
-        let html = `<tr id="history-${data.historyId}" style="font-size: 0.55em;"><td>${data.timeStamp}</td><td>${data.price}</td><td>-</td><td>${data.amount}</td><td style="${classSide}">${data.type}</td><td>Untouched</td>`
+        let status = data.type == 'Limit' ? 'Untouched' : 'Filled';
+        let filled = data.type == 'Limit' ? '-' : 'Market';
+
+        let html = `<tr id="history-${data.historyId}" style="font-size: 0.55em;"><td>${data.timeStamp}</td><td>${data.price}</td><td>${filled}</td><td>${data.amount}</td><td style="${classSide}">${data.type}</td><td>${status}</td>`
         $(`#user-history tr:first`).after(html);
     }
 }
+
 
 function editLimitSideHistory(data) {
     $(`#history-${data.orderId}`).children()[5].innerText = data.orderStatus;
