@@ -82,8 +82,8 @@ async function addOrder(data) {
 
     processing = true;
 
-    data.price = Math.round(data.price * 10000000) / 10000000;
-    data.amount = Math.round(data.amount * 10000000) / 10000000;
+    data.price = round(data.price);
+    data.amount = round(data.amount);
 
 
     let OBobject = { price: data.price, amount: data.amount, id: Number(data.user.userId) };
@@ -124,7 +124,7 @@ async function addOrder(data) {
 
         // If a bid is set, resrve 'amount * price' worth of dollars
         // If an ask is set, reserve 'amount' worth of ETH
-        let change = orderType == 0 ? Math.round(OBobject.amount * OBobject.price * 10000000) / 10000000 : Math.round(OBobject.amount * 10000000) / 10000000;
+        let change = orderType == 0 ? round(OBobject.amount * OBobject.price) : round(OBobject.amount);
 
 
         //--------------------------------2-------------------------------- 
@@ -237,7 +237,7 @@ async function removeOrder(data) {
     let reserved = side == 0 ? 'reservedUSD' : 'reservedETH';
 
     //--------------------------------2--------------------------------
-    let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${Math.round(change * 10000000) / 10000000} WHERE "id" = ${data.user.id}`;
+    let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" - ${round(change)} WHERE "id" = ${data.user.id}`;
     await db.query(updateUserBalance);
 
 
@@ -276,8 +276,8 @@ async function marketOrder(data) {
 
     if ((OBside == 0 && thickness[0] >= data.amount) || (OBside == 1 && thickness[1] >= data.amount)) {
         let OBrow = orderBook[OBside][0];
-        OBrow.price = Math.round(OBrow.price * 10000000) / 10000000;
-        OBrow.amount = Math.round(OBrow.amount * 10000000) / 10000000;
+        OBrow.price = round(OBrow.price);
+        OBrow.amount = round(OBrow.amount);
 
 
         // The amount that changed hands in this transaction
@@ -308,7 +308,7 @@ async function marketOrder(data) {
             let removeOrderChange = OBside == 0 ? change * OBrow.price : change;
             let reserved = OBside == 0 ? 'reservedUSD' : 'reservedETH';
 
-            let updateUserReserved = `UPDATE users SET "${reserved}" = "${reserved}" - ${Math.round(removeOrderChange * 10000000) / 10000000} WHERE "id" = ${OBrow.id}`;
+            let updateUserReserved = `UPDATE users SET "${reserved}" = "${reserved}" - ${round(removeOrderChange)} WHERE "id" = ${OBrow.id}`;
             await db.query(updateUserReserved);
 
             let removeFully = change >= OBrow.amount;
@@ -329,7 +329,7 @@ async function marketOrder(data) {
             // If the first order in the books wasn't enough, remove it
             if (OBrow.amount <= 0) {
                 orderBook[OBside].splice(0, 1);
-                data.amount = data.amount - Math.round(amountAvailable * 10000000) / 10000000;
+                data.amount = data.amount - round(amountAvailable);
 
             }
 
@@ -341,24 +341,24 @@ async function marketOrder(data) {
             // Updating the user's info who initiated the market order
             let marketTakeBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
             let marketTakeChange = OBside == 0 ? change : change * OBrow.price;
-            let updateTakeMarketSide = `UPDATE users SET "${marketTakeBalanceSide}" = "${marketTakeBalanceSide}" - ${Math.round(marketTakeChange * 10000000) / 10000000} WHERE "id" = ${data.user.id}`
+            let updateTakeMarketSide = `UPDATE users SET "${marketTakeBalanceSide}" = "${marketTakeBalanceSide}" - ${round(marketTakeChange)} WHERE "id" = ${data.user.id}`
             await db.query(updateTakeMarketSide);
 
             let marketAddBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
             let marketAddChange = OBside == 0 ? change * OBrow.price : change;
-            let updateAddMarketSide = `UPDATE users SET "${marketAddBalanceSide}" = "${marketAddBalanceSide}" + ${Math.round(marketAddChange * 10000000) / 10000000} WHERE "id" = ${data.user.id}`
+            let updateAddMarketSide = `UPDATE users SET "${marketAddBalanceSide}" = "${marketAddBalanceSide}" + ${round(marketAddChange)} WHERE "id" = ${data.user.id}`
             await db.query(updateAddMarketSide);
 
 
             // Update the user's info who was on the limit side
             let limitTakeBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
             let limitTakeChange = OBside == 0 ? change * OBrow.price : change;
-            let updateTakeLimittSide = `UPDATE users SET "${limitTakeBalanceSide}" = "${limitTakeBalanceSide}" - ${Math.round(limitTakeChange * 10000000) / 10000000} WHERE "id" = ${OBrow.id}`
+            let updateTakeLimittSide = `UPDATE users SET "${limitTakeBalanceSide}" = "${limitTakeBalanceSide}" - ${round(limitTakeChange)} WHERE "id" = ${OBrow.id}`
             await db.query(updateTakeLimittSide);
 
             let limitAddBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
             let limitAddChange = OBside == 0 ? change : change * OBrow.price;
-            let updateAddLimitSide = `UPDATE users SET "${limitAddBalanceSide}" = "${limitAddBalanceSide}" + ${Math.round(limitAddChange * 10000000) / 10000000} WHERE "id" = ${OBrow.id}`
+            let updateAddLimitSide = `UPDATE users SET "${limitAddBalanceSide}" = "${limitAddBalanceSide}" + ${round(limitAddChange)} WHERE "id" = ${OBrow.id}`
             await db.query(updateAddLimitSide);
 
             let marketSide = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
@@ -427,7 +427,7 @@ async function marketOrder(data) {
 
 
             let sellOrBuy = OBside == 0 ? 'sell' : 'buy';
-            console.log(sellOrBuy + ' MARKET at ' + OBrow.price + ' for ' + Math.round(change * 10000000) / 10000000 + ' by ' + data.user.id);
+            console.log(sellOrBuy + ' MARKET at ' + OBrow.price + ' for ' + round(change) + ' by ' + data.user.id);
 
 
             // If the market order didn't get filled, repeat the process
@@ -504,6 +504,11 @@ function OBthickness() {
             thickness[i] += orderBook[i][j].amount;
 
     return thickness;
+}
+
+
+function round(num) {
+    return Math.round(num * 10000000) / 10000000;
 }
 
 module.exports = {

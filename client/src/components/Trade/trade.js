@@ -25,7 +25,7 @@ socket.on('transmitOB', (data) => {
 
 export function order(action, amount, price, market) {
 
-    amount = Math.round(amount * 10000000) / 10000000;
+    amount = round(amount);
 
     let orderType = action == 'buy' ? 0 : 1;
 
@@ -56,7 +56,7 @@ socket.on('addOrder', async (data) => {
         if (data.type == 'bid') {
             if (data.userID == user.id) {
                 user.availableUSD -= data.order.price * data.order.amount;
-                document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
+                document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
             }
 
 
@@ -64,7 +64,7 @@ socket.on('addOrder', async (data) => {
         if (data.userID == user.id && data.type == 'ask') {
 
             user.availableETH -= data.order.amount;
-            document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
+            document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
         }
 
         if (matchingPriceAmount == false) {
@@ -73,7 +73,7 @@ socket.on('addOrder', async (data) => {
         }
         else {
             let children = $(`#${data.type} tbody`).children();
-            $(children[matchingPriceAmount.index]).children()[1].innerText = Math.round((Number(matchingPriceAmount.amount) + Number(data.order.amount)) * 10000000) / 10000000;
+            $(children[matchingPriceAmount.index]).children()[1].innerText = round((Number(matchingPriceAmount.amount) + Number(data.order.amount)));
 
         }
 
@@ -106,7 +106,7 @@ socket.on('removeOrder', async (data) => {
 
             // If a certain price has multiple orders from multiple users, just update the amount
             if (Number($(rows[i]).children()[1].innerText) > data.amount)
-                $(rows[i]).children()[1].innerText = Math.round((Number($(rows[i]).children()[1].innerText) - data.amount) * 10000000) / 10000000;
+                $(rows[i]).children()[1].innerText = round((Number($(rows[i]).children()[1].innerText) - data.amount));
 
             // If not, remove the whole row-element
             else
@@ -124,12 +124,12 @@ socket.on('removeOrder', async (data) => {
         if (data.userClicked && side == 'bid') {
             user.availableUSD += data.price * data.amount;
 
-            document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
+            document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
 
         }
         if (data.userClicked && side == 'ask') {
             user.availableETH += data.amount;
-            document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
+            document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
         }
 
     }
@@ -150,12 +150,12 @@ socket.on('marketOrder', async (data) => {
 
         user.balanceUSD = data.balanceUSD;
         user.availableUSD = data.balanceUSD - data.reservedUSD;
-        document.getElementById('usdAvailable').innerText = `USD: ${Math.round(user.availableUSD * 10000000) / 10000000}`
+        document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
 
 
         user.balanceETH = data.balanceETH;
         user.availableETH = data.balanceETH - data.reservedETH;
-        document.getElementById('ethAvailable').innerText = `ETH: ${Math.round(user.availableETH * 10000000) / 10000000}`
+        document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
 
         if (data.type == 'limit')
             editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
@@ -170,7 +170,7 @@ socket.on('marketOrder', async (data) => {
 
 // Add new entry on local history
 socket.on('historyInfo', (data) => {
-    data.amount = Math.round(data.amount * 10000000) / 10000000;
+    data.amount = round(data.amount);
     if (data.amount > 0) {
 
         let classSide = data.side == 0 ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
@@ -298,7 +298,7 @@ export async function receiveUserInfo(data) {
 
 
 function addHistory(data) {
-    data.amount = Math.round(data.amount * 10000000) / 10000000;
+    data.amount = round(data.amount);
     if (data.amount > 0) {
         let classSide;
         classSide = data.side == 'ask' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
@@ -339,4 +339,8 @@ export function drawHistory(data) {
         $(`#user-history tr:first`).after(html);
 
     })
+}
+
+function round(num) {
+    return Math.round(num * 10000000) / 10000000;
 }
