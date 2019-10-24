@@ -297,6 +297,7 @@ export async function receiveUserInfo(data) {
 }
 
 
+
 function addHistory(data) {
     data.amount = round(data.amount);
     if (data.amount > 0) {
@@ -305,6 +306,7 @@ function addHistory(data) {
 
         let status = data.type == 'Limit' ? 'Untouched' : 'Filled';
         let filled = data.type == 'Limit' ? '-' : 'Market';
+
 
         let html = `<tr id="history-${data.historyId}" style="font-size: 0.55em;"><td>${data.timeStamp}</td><td>${data.price}</td><td>${filled}</td><td>${data.amount}</td><td style="${classSide}">${data.type}</td><td>${status}</td>`
         $(`#user-history tr:first`).after(html);
@@ -327,7 +329,12 @@ function cancelInHistory(data) {
 export function drawHistory(data) {
 
     data.forEach((e) => {
-        let filled = e.filled == 0 ? '-' : e.filled;
+        let filled = '';
+        if (e.type == 'Market')
+            filled = 'Market'
+        else
+            filled = e.filled == 0 ? '-' : e.filled;
+
         let classSide = e.side == 'sell' ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
         e.status = e.status.charAt(0).toUpperCase() + e.status.slice(1);
         e.type = e.type.charAt(0).toUpperCase() + e.type.slice(1);
