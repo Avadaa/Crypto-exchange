@@ -325,6 +325,9 @@ function cancelInHistory(data) {
 
 }
 
+function round(num) {
+    return Math.round(num * 10000000) / 10000000;
+}
 
 export function drawHistory(data) {
 
@@ -348,6 +351,3 @@ export function drawHistory(data) {
     })
 }
 
-function round(num) {
-    return Math.round(num * 10000000) / 10000000;
-}

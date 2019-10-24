@@ -1,15 +1,27 @@
 <template>
   <div id="settings" class="hidden">
-    <div id="panel">
-      <img id="user-avatar-preview" src="../../assets/pics/logo.png" height="150" width="150" />
-      <div id="upload">
-        <p>Upload your new avatar</p>
-        <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
-        <br />
-        <button id="upload-btn" v-on:click="send();">Upload</button>
-        <p>Maximum file size 2MB</p>
+    <div id="container">
+      <div id="tabs">
+        <button id="tab" @click="toggleTabs()">Account settings</button>
       </div>
-      <div></div>
+      <div id="avatar">
+        <img id="user-avatar-preview" src="../../assets/pics/logo.png" height="150" width="150" />
+        <div id="upload">
+          <p>Upload your new avatar</p>
+          <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
+          <br />
+          <button id="upload-btn" v-on:click="send();">Upload</button>
+          <p>Maximum file size 2MB</p>
+        </div>
+        <div></div>
+      </div>
+      <div id="accountInfo">
+        <div id="nameDiv">
+          <label for="username">New username</label>
+          <input type="text" name="username" v-model="username" autocomplete="off" />
+          <button v-on:click="changeName();">Change name</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -48,7 +60,10 @@ export default {
         headers: {
           "Cache-Control": ""
         }
-      }
+      },
+      username: "",
+      password: "",
+      passwordRetype: ""
     };
   },
 
@@ -67,6 +82,18 @@ export default {
         document.getElementById("user-avatar-preview").src = file[0].dataURL;
         document.getElementById("avatar-img").src = file[0].dataURL;
       }
+    },
+    toggleTabs() {
+      if ($("#avatar").css("display") == "block") {
+        $("#avatar").css("display", "none");
+        $("#accountInfo").css("display", "block");
+      } else {
+        $("#avatar").css("display", "block");
+        $("#accountInfo").css("display", "none");
+      }
+    },
+    changeName() {
+      console.log(this.username);
     }
   },
   mounted() {
@@ -85,7 +112,7 @@ export default {
 
 <style scoped lang="scss">
 #settings,
-#panel {
+#container {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -94,14 +121,14 @@ export default {
   margin: auto;
 }
 
-#settings:not(#panel) {
+#settings:not(#container) {
   width: 100vw;
   height: 100vh;
 
   z-index: 1;
   background: rgba(116, 116, 116, 0.7);
 }
-#panel {
+#container {
   background: rgb(41, 41, 41);
   border: 2px solid white;
   border-radius: 5px;
@@ -112,7 +139,18 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
 
+#tab {
+  height: 50px;
+  width: 200px;
+
+  position: absolute;
+  left: 570px;
+  top: 30px;
+}
+
+#avatar {
   #img {
     margin-left: 100px;
     margin-top: 50px;
@@ -125,18 +163,57 @@ export default {
       margin-right: 200px;
     }
     button {
-      color: white;
       height: 50px;
       width: 350px;
-      background: rgb(55, 149, 255);
-      border: 1px solid white;
-
-      font-size: 1.6em;
-
-      &:hover {
-        border: 2px solid white;
-      }
     }
+  }
+}
+
+#accountInfo {
+  display: none;
+  width: 796px;
+  height: 700px;
+  font-size: 2em;
+
+  #nameDiv {
+    position: relative;
+    top: 140px;
+    left: 40px;
+
+    button {
+      margin-top: 20px;
+      margin-left: 320px;
+
+      width: 180px;
+      font-size: 0.7em;
+    }
+  }
+
+  label {
+    margin-top: 5px;
+    float: left;
+    width: 250px;
+  }
+  input {
+    border-radius: 5px;
+    border: 0;
+    font-size: 1em;
+    float: left;
+
+    padding: 5px;
+  }
+}
+
+button {
+  color: white;
+
+  background: rgb(55, 149, 255);
+  border: 1px solid white;
+
+  font-size: 1.5em;
+
+  &:hover {
+    border: 2px solid white;
   }
 }
 
