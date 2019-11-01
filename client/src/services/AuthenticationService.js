@@ -34,6 +34,9 @@ export default {
     },
     history(userId) {
         return Api().post('api/user/history', userId);
+    },
+    changeName(userInfo) {
+        return Api().post('api/user/changename', userInfo);
     }
 
 }

@@ -19,6 +19,8 @@
         <div id="nameDiv">
           <label for="username">New username</label>
           <input type="text" name="username" v-model="username" autocomplete="off" />
+          <br />
+          <p id="username-res-msg">msg</p>
           <button v-on:click="changeName();">Change name</button>
         </div>
       </div>
@@ -92,8 +94,24 @@ export default {
         $("#accountInfo").css("display", "none");
       }
     },
-    changeName() {
-      console.log(this.username);
+    async changeName() {
+      let usernameRes = await auth.changeName({
+        newName: this.username,
+        userId: this.$store.state.user.userId
+      });
+
+      $("#username-res-msg").text(usernameRes.data.msg);
+
+      if (usernameRes.data.success) {
+        $("#username-p").text(usernameRes.data.username);
+        $("#username-res-msg").css("left", "-30px");
+        $("#username-res-msg").css("color", "rgb(170, 255, 170)");
+
+        localStorage.setItem("username", usernameRes.data.username);
+      } else {
+        $("#username-res-msg").css("left", "-3px");
+        $("#username-res-msg").css("color", "rgb(255, 163, 163)");
+      }
     }
   },
   mounted() {
@@ -181,11 +199,21 @@ export default {
     left: 40px;
 
     button {
+      position: relative;
+      top: -70px;
       margin-top: 20px;
       margin-left: 320px;
 
       width: 180px;
       font-size: 0.7em;
+    }
+    p {
+      position: relative;
+      color: rgb(41, 41, 41);
+      top: 5px;
+      width: 300px;
+
+      font-size: 0.75em;
     }
   }
 

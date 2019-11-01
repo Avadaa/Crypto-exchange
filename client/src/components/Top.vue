@@ -9,7 +9,7 @@
         <img id="settingsIcon" src="../assets/pics/settings.png" height="30" width="30" />
         <img id="avatar-img" src="../assets/pics/logo.png" height="50" width="50" draggable="false" />
         <div>
-          <p class="user">{{$store.state.user.username}}</p>
+          <p class="user" id="username-p">{{$store.state.user.username}}</p>
           <p class="user" id="ethAvailable"></p>
           <p class="user" id="usdAvailable"></p>
         </div>

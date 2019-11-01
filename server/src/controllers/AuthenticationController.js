@@ -148,5 +148,17 @@ module.exports = {
 
         // Sending only the last 100 orders
         res.send(orderHistory);
+    },
+    async changeName(req, res) {
+        let usernameUniqueQuery = `SELECT username FROM users WHERE username = '${req.body.newName}'`
+
+        let uniqueRes = await db.query(usernameUniqueQuery);
+        if (uniqueRes.length == 0) {
+            let usernameChangequery = `UPDATE users SET username = '${req.body.newName}' WHERE id = ${req.body.userId}`;
+            await db.query(usernameChangequery)
+            res.send({ success: true, msg: "Username changed", username: req.body.newName });
+        }
+        else
+            res.send({ success: false, msg: "Username already taken" })
     }
 }
