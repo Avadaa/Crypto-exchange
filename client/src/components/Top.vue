@@ -119,7 +119,7 @@ export default {
   background: #1b2931;
   color: white;
   min-width: 800px;
-  width: 100vw;
+  width: 99.3vw;
   margin-left: -8px;
 
   #userInfo {
