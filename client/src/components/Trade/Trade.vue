@@ -36,6 +36,8 @@
           </table>
         </div>
         <span id="currentPrice">0</span>
+        <br />
+        <span id="index">Index: 0</span>
         <div id="bidDiv" class="sides">
           <table id="bid">
             <tbody>

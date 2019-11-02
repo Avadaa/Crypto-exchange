@@ -1,5 +1,6 @@
 const server = require('../server');
 const db = require('../dbQueries');
+let mm = require('../market_maker/mm')
 
 // Didn't get socket IO to work on client side without an 
 // additional http connection on a different port
@@ -24,20 +25,24 @@ let que = [];
 let processing = false;
 let executing = false;
 
+
+
 io.on('connect', async (socket) => {
 
 
     setTimeout(() => {
         socket.emit('transmitOB', { OB: orderBook, currentPrice });
 
+
+
     }, 200);
+
 
 
 
     socket.on('order', (data) => {
 
         que.push(data);
-
 
         if (!executing)
             executeTasks();
@@ -514,5 +519,7 @@ function round(num) {
 module.exports = {
     obInfo() {
         return ({ OB: orderBook, OBcompressed: compactOB(), currentPrice });
-    }
+    },
+    io
+
 }

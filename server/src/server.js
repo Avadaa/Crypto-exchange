@@ -53,7 +53,7 @@ let server = app.listen(process.env.PORT || 3000, () => {
 });
 
 
-
+require('./market_maker/mm').initiate();
 
 
 require('./routes')(app)

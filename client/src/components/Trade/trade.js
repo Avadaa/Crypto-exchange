@@ -22,7 +22,6 @@ socket.on('transmitOB', (data) => {
 
 
 
-
 export function order(action, amount, price, market) {
 
     amount = round(amount);
@@ -47,6 +46,10 @@ export function order(action, amount, price, market) {
 
 
 }
+
+socket.on('updateIndex', async (data) => {
+    $('#index').text(`Index: ${data.price}`);
+})
 
 
 socket.on('addOrder', async (data) => {
