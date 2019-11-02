@@ -136,7 +136,7 @@ export default {
   }
 
   .redBorder {
-    border: 2px solid rgb(255, 66, 66);
+    border: 2px solid rgb(253, 135, 135);
   }
 }
 </style>
