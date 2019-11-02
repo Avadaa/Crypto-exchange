@@ -17,11 +17,27 @@
       </div>
       <div id="accountInfo">
         <div id="nameDiv">
-          <label for="username">New username</label>
-          <input type="text" name="username" v-model="username" autocomplete="off" />
+          <label for="change-username">New username</label>
+          <input type="text" name="change-username" v-model="newUsername" autocomplete="off" />
           <br />
           <p id="username-res-msg">msg</p>
           <button v-on:click="changeName();">Change name</button>
+        </div>
+        <div id="pwDiv">
+          <div>
+            <label for="pw-current">Current password</label>
+            <input type="text" name="pw-current" v-model="pwCurr" autocomplete="off" />
+          </div>
+          <div>
+            <label for="pw-new">New password</label>
+            <input type="text" name="pw-new" v-model="pwNew" autocomplete="off" />
+          </div>
+          <div>
+            <label for="pw-new-confirm">Confirm new password</label>
+            <input type="text" name="pw-new-confirm" v-model="pwNewConfirm" autocomplete="off" />
+          </div>
+          <button v-on:click="changePw();">Change password</button>
+          <p id="pwChangeErrors">Err</p>
         </div>
       </div>
     </div>
@@ -63,9 +79,10 @@ export default {
           "Cache-Control": ""
         }
       },
-      username: "",
-      password: "",
-      passwordRetype: ""
+      newUsername: "",
+      pwCurr: "",
+      pwNew: "",
+      pwNewConfirm: ""
     };
   },
 
@@ -88,29 +105,50 @@ export default {
     toggleTabs() {
       if ($("#avatar").css("display") == "block") {
         $("#avatar").css("display", "none");
-        $("#accountInfo").css("display", "block");
+        $("#accountInfo").css("display", "flex");
+        $("#tab").text("Avatar settings");
       } else {
         $("#avatar").css("display", "block");
         $("#accountInfo").css("display", "none");
+        $("#tab").text("Account settings");
       }
     },
     async changeName() {
-      let usernameRes = await auth.changeName({
-        newName: this.username,
+      if (this.newUsername.length < 3) {
+        $("#username-res-msg").text("Username too short");
+        $("#username-res-msg").css("color", "rgb(255, 163, 163)");
+      } else {
+        let usernameRes = await auth.changeName({
+          newName: this.newUsername,
+          userId: this.$store.state.user.userId
+        });
+
+        $("#username-res-msg").text(usernameRes.data.msg);
+
+        if (usernameRes.data.success) {
+          $("#username-p").text(usernameRes.data.username);
+          $("#username-res-msg").css("color", "rgb(170, 255, 170)");
+
+          localStorage.setItem("username", usernameRes.data.username);
+        } else $("#username-res-msg").css("color", "rgb(255, 163, 163)");
+      }
+    },
+
+    async changePw() {
+      let pwRes = await auth.changePw({
+        pwCurr: this.pwCurr,
+        pwNew: this.pwNew,
+        pwNewConfirm: this.pwNewConfirm,
         userId: this.$store.state.user.userId
       });
 
-      $("#username-res-msg").text(usernameRes.data.msg);
-
-      if (usernameRes.data.success) {
-        $("#username-p").text(usernameRes.data.username);
-        $("#username-res-msg").css("left", "-30px");
-        $("#username-res-msg").css("color", "rgb(170, 255, 170)");
-
-        localStorage.setItem("username", usernameRes.data.username);
+      $("#pwChangeErrors").html(pwRes.data.msg.join("<br/>"));
+      if (pwRes.data.success) {
+        $("#pwChangeErrors").css("color", "rgb(170, 255, 170)");
+        $("#pwChangeErrors").css("font-size", "0.75em");
       } else {
-        $("#username-res-msg").css("left", "-3px");
-        $("#username-res-msg").css("color", "rgb(255, 163, 163)");
+        $("#pwChangeErrors").css("color", "rgb(255, 163, 163)");
+        $("#pwChangeErrors").css("font-size", "0.5em");
       }
     }
   },
@@ -189,44 +227,88 @@ export default {
 
 #accountInfo {
   display: none;
+
+  flex-direction: column;
+  align-items: center;
   width: 796px;
   height: 700px;
   font-size: 2em;
 
-  #nameDiv {
-    position: relative;
-    top: 140px;
-    left: 40px;
-
+  #nameDiv,
+  #pwDiv {
     button {
       position: relative;
-      top: -70px;
-      margin-top: 20px;
-      margin-left: 320px;
-
-      width: 180px;
+      margin-left: 435px;
+      width: 210px;
       font-size: 0.7em;
     }
     p {
-      position: relative;
       color: rgb(41, 41, 41);
+    }
+  }
+
+  #nameDiv {
+    height: 130px;
+    position: relative;
+    top: 140px;
+    margin-bottom: 200px;
+
+    button {
+      top: -55px;
+    }
+    p {
+      position: relative;
       top: 5px;
       width: 300px;
 
       font-size: 0.75em;
+      text-align: left;
+    }
+  }
+
+  #pwDiv {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    width: 649px;
+    label {
+      margin-bottom: 40px;
+    }
+
+    #pwChangeErrors {
+      position: relative;
+      top: -40px;
+      width: 400px;
+
+      text-align: left;
+      font-size: 0.5em;
+    }
+
+    button {
+      &:hover {
+        border: 1px solid white;
+        outline: 1px solid white;
+      }
     }
   }
 
   label {
+    width: 270px;
+
     margin-top: 5px;
+    margin-right: 37px;
+
     float: left;
-    width: 250px;
+
+    font-size: 0.8em;
+    text-align: left;
   }
   input {
     border-radius: 5px;
     border: 0;
-    font-size: 1em;
+    font-size: 0.8em;
     float: left;
+    width: 330px;
 
     padding: 5px;
   }

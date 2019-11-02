@@ -69,5 +69,36 @@ module.exports = {
             });
 
 
+    },
+
+    async changePw(req, res, next) {
+        const bcrypt = require('bcryptjs');
+
+        let errors = []
+
+        let checkPwHashQuery = `SELECT pwhash FROM users WHERE id = ${req.body.userId}`
+        let userPwHash = await db.query(checkPwHashQuery);
+
+        await bcrypt.compare(req.body.pwCurr, userPwHash[0].pwhash, function (err, pwResult) {
+            if (err == true)
+                errors.push("Unexpected error")
+
+            if (pwResult == false)
+                errors.push("Current password is incorrect")
+
+            if (req.body.pwCurr == req.body.pwNew)
+                errors.push("Give a changed password")
+            else if (req.body.pwNew != req.body.pwNewConfirm)
+                errors.push("New passwords have to match")
+
+            if (req.body.pwNew.length < 6)
+                errors.push("Password has to be 6 or more characters long")
+
+
+            if (errors.length != 0)
+                res.status(200).send({ success: false, msg: errors });
+            else
+                next();
+        });
     }
 }

@@ -37,6 +37,9 @@ export default {
     },
     changeName(userInfo) {
         return Api().post('api/user/changename', userInfo);
+    },
+    changePw(userInfo) {
+        return Api().post('api/user/changepw', userInfo);
     }
 
 }

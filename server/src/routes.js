@@ -27,6 +27,8 @@ module.exports = (app) => {
     app.post('/api/avatar', AuthenticationController.getAvatar);
     app.post('/api/user/history', AuthenticationController.getHistory);
     app.post('/api/user/changename', AuthenticationController.changeName);
+    app.post('/api/user/changepw', AuthenticationControllerPolicy.changePw,
+        AuthenticationController.changePw);
 
 
 }

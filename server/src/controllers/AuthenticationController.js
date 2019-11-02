@@ -160,5 +160,32 @@ module.exports = {
         }
         else
             res.send({ success: false, msg: "Username already taken" })
+    },
+
+    async changePw(req, res) {
+        const bcrypt = require('bcryptjs');
+        const bcryptSaltRounds = 10;
+
+        let msg = []
+        let success = false;
+
+        bcrypt.hash(req.body.pwNew, bcryptSaltRounds, async (err, hash) => {
+            if (err)
+                msg.push("Unexpected error")
+
+            else {
+                let pwChangeQuery = `UPDATE users SET pwHash = '${hash}' WHERE id = ${req.body.userId}`
+                let pwRes = await db.query(pwChangeQuery);
+
+                if (pwRes.length == 0) {
+                    success = true;
+                    msg.push("Password changed")
+                }
+                else
+                    msg.push("Unexpected error")
+
+                res.send({ success, msg });
+            }
+        })
     }
 }
