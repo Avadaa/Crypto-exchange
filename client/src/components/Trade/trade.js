@@ -48,7 +48,7 @@ export function order(action, amount, price, market) {
 }
 
 socket.on('updateIndex', async (data) => {
-    $('#index').text(`Index: ${data.price}`);
+    $('#index').text(`Index: ${data.index}`);
 })
 
 
@@ -80,16 +80,11 @@ socket.on('addOrder', async (data) => {
 
         }
 
-
         OB = data.OB;
-        console.log(user.id + '   ' + data.userID)
         findOwnOrders();
-        if (data.userID == user.id)
+        if (data.historyId != null && data.userID == user.id)
             addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
-
     }
-
-
 });
 
 socket.on('removeOrder', async (data) => {
@@ -160,11 +155,14 @@ socket.on('marketOrder', async (data) => {
         user.availableETH = data.balanceETH - data.reservedETH;
         document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
 
-        if (data.type == 'limit')
-            editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
+        if (data.filled != null) {
+            if (data.type == 'limit')
+                editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
 
-        if (data.type == 'market')
-            addHistory({ price: data.currentPrice, amount: data.amount, side: data.side, timeStamp: data.timeStamp, historyId: data.orderId, type: 'Market' });
+            if (data.type == 'market')
+                addHistory({ price: data.currentPrice, amount: data.amount, side: data.side, timeStamp: data.timeStamp, historyId: data.orderId, type: 'Market' });
+        }
+
 
 
 
@@ -270,7 +268,6 @@ function matchingPrices(side, price) {
 }
 
 export function findOwnOrders() {
-
     let prices = [[], []];
 
     for (let i = 0; i < 2; i++)
@@ -318,6 +315,9 @@ function addHistory(data) {
 
 
 function editLimitSideHistory(data) {
+
+    console.log(data)
+    console.log($(`#history-${data.orderId}`))
     $(`#history-${data.orderId}`).children()[5].innerText = data.orderStatus;
     $(`#history-${data.orderId}`).children()[2].innerText = data.filled;
 }

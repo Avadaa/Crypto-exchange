@@ -1,6 +1,7 @@
 const server = require('../server');
 const db = require('../dbQueries');
 let mm = require('../market_maker/mm')
+let mmConf = require('../../config/mm')
 
 // Didn't get socket IO to work on client side without an 
 // additional http connection on a different port
@@ -43,7 +44,6 @@ io.on('connect', async (socket) => {
     socket.on('order', (data) => {
 
         que.push(data);
-
         if (!executing)
             executeTasks();
     });
@@ -52,7 +52,6 @@ io.on('connect', async (socket) => {
 
 async function executeTasks() {
     executing = true;
-
     while (que.length > 0) {
         if (!processing) {
 
@@ -82,9 +81,10 @@ async function processQue(data) {
 // 3. Add a new entry to server side OB
 // 4. Update 'reserved' amount in database
 // 5. Create an entry to history table in database
+//      The market maker doesn't store history. The algo is constantly changing order amounts, so
+//      that'd require constant DB calls and it'd be a mess. Not worth the load either.
 // 6. Emit to client side
 async function addOrder(data) {
-
     processing = true;
 
     data.price = round(data.price);
@@ -149,6 +149,7 @@ async function addOrder(data) {
             // Add a new entry to the server-side order book
             orderBook[orderType].splice(index, 0, OBobject);
 
+
             index = findIndex('client', orderType, OBobject.price);
 
             if (orderType == 0)
@@ -167,17 +168,25 @@ async function addOrder(data) {
 
             console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
 
-            //--------------------------------5--------------------------------  
-            let time = new Date();
-            let timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+            //--------------------------------5--------------------------------
+            let historyId = [{ id: null }];
+            let timeStamp = null;
+            if (mmConf.ID != OBobject.id) {
 
-            let buySell = emitType == 'bid' ? 'buy' : 'sell';
-            let historyQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}', '${OBobject.amount}') RETURNING id`;
-            let historyId = await db.query(historyQuery);
+                let time = new Date();
+                timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
 
-            // Adding an order id and to the books 
-            // Helps quite a lot when handling the front-end side regarding user's trade history
-            orderBook[orderType][serverIndex].orderId = historyId[0].id;
+                let buySell = emitType == 'bid' ? 'buy' : 'sell';
+                let historyQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}', '${OBobject.amount}') RETURNING id`;
+                historyId = null;
+                historyId = await db.query(historyQuery);
+
+
+                // Adding an order id and to the books 
+                // Helps quite a lot when handling the front-end side regarding user's trade history
+                orderBook[orderType][serverIndex].orderId = historyId[0].id;
+            }
+
 
             // Adding original size to help keep track of the total filled amount
             orderBook[orderType][serverIndex].originalAmount = OBobject.amount;
@@ -214,7 +223,6 @@ async function addOrder(data) {
 // 3. Edit history -rows in database
 // 4. Emit changes to client side
 async function removeOrder(data) {
-
     //--------------------------------1--------------------------------
     let amountRemoved = 0;
     let removedOrderIds = [];
@@ -248,10 +256,11 @@ async function removeOrder(data) {
 
     //--------------------------------3--------------------------------
 
-    for (let i = 0; i < removedOrderIds.length; i++) {
-        let updateHistoryQuery = `UPDATE history SET "status" = 'cancelled' WHERE "id" = ${removedOrderIds[i]}`
-        await db.query(updateHistoryQuery);
-    }
+    if (data.user.id != mmConf.ID)
+        for (let i = 0; i < removedOrderIds.length; i++) {
+            let updateHistoryQuery = `UPDATE history SET "status" = 'cancelled' WHERE "id" = ${removedOrderIds[i]}`
+            await db.query(updateHistoryQuery);
+        }
 
     //--------------------------------4--------------------------------
     let removeFully = true;
@@ -270,6 +279,7 @@ async function removeOrder(data) {
 
 // Making an actual trade (market order)
 async function marketOrder(data) {
+
 
     //console.log('Order ' + data.orderID + ' processing started');
     processing = true;
@@ -306,6 +316,7 @@ async function marketOrder(data) {
 
 
         if (userHasBalance) {
+
 
             let amountAvailable = OBrow.amount;
 
@@ -373,21 +384,36 @@ async function marketOrder(data) {
 
 
             // Update the changed limit order in  history-table in db
-            let orderStatus = OBrow.amount == 0 ? 'Filled' : 'Partially filled'
-            let amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
-            let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
-            await db.query(makerHistoryQuery);
+            let orderStatus = null;
+            let amountFilled = null;
+            if (mmConf.ID != OBrow.id) {
+                orderStatus = OBrow.amount == 0 ? 'Filled' : 'Partially filled'
+                amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
+                let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
+                await db.query(makerHistoryQuery);
+
+            }
+
 
             // Add an entry for the taker-side user in db
-            let time = new Date();
-            let timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+            let buySell = null;
+            let timeStamp = null;
+            let marketSideOrderId = [{ id: null }];
+            if (data.user.id != mmConf.ID) {
+                let time = new Date();
+                timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
 
-            let buySell = OBside == 0 ? 'sell' : 'buy';
-            let takerHistoryQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${data.user.id}', '${change}','${timeStamp}', '${buySell}', 'Market', 'Filled', '${OBrow.price}', '${change}') RETURNING id`;
-            let marketSideOrderId = await db.query(takerHistoryQuery);
+                buySell = OBside == 0 ? 'sell' : 'buy';
+                let takerHistoryQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${data.user.id}', '${change}','${timeStamp}', '${buySell}', 'Market', 'Filled', '${OBrow.price}', '${change}') RETURNING id`;
+                marketSideOrderId = null;
+                marketSideOrderId = await db.query(takerHistoryQuery);
 
-            // For front end colors to be right in the order history
-            buySell = buySell == 'sell' ? 'ask' : 'bid';
+                // For front end colors to be right in the order history
+                buySell = buySell == 'sell' ? 'ask' : 'bid';
+            }
+
+
+
 
             currentPrice = OBrow.price;
 
@@ -520,6 +546,11 @@ module.exports = {
     obInfo() {
         return ({ OB: orderBook, OBcompressed: compactOB(), currentPrice });
     },
-    io
+    // For 'mm.js' to use
+    io,
+    que,
+    executing,
+    executeTasks,
+    orderBook
 
 }
