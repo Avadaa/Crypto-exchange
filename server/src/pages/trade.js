@@ -73,6 +73,9 @@ async function processQue(data) {
 
     if (data.task == 'marketOrder')
         await marketOrder(data);
+
+    if (data.task == 'changeOrder')
+        await changeOrder(data);
 }
 
 // Adding a new order (bid or ask) to the books
@@ -255,12 +258,14 @@ async function removeOrder(data) {
 
 
     //--------------------------------3--------------------------------
-
-    if (data.user.id != mmConf.ID)
+    let isMM = true;
+    if (data.user.id != mmConf.ID) {
+        isMM = false;
         for (let i = 0; i < removedOrderIds.length; i++) {
             let updateHistoryQuery = `UPDATE history SET "status" = 'cancelled' WHERE "id" = ${removedOrderIds[i]}`
             await db.query(updateHistoryQuery);
         }
+    }
 
     //--------------------------------4--------------------------------
     let removeFully = true;
@@ -272,7 +277,8 @@ async function removeOrder(data) {
             data.user.id,
         removeFully,
         userClicked,
-        orderIds: removedOrderIds
+        orderIds: removedOrderIds,
+        isMM
     })
     console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
 }
@@ -471,6 +477,62 @@ async function marketOrder(data) {
     processing = false;
 }
 
+// Currently for MM algorithm only. 
+// Minimal error processing, because users don't have access.
+async function changeOrder(data) {
+    processing = true;
+
+    let balanceQuery = `SELECT * FROM users WHERE id = ${mmConf.ID}`;
+    let balances = await db.query(balanceQuery);
+
+    let originalAmount;
+
+    let reserved = '';
+
+    for (let order of orderBook[data.orderType]) {
+        if (order.price == data.price) {
+
+            originalAmount = order.amount;
+            let change = round(data.amount - order.amount);
+            data.change = change;
+
+            change = data.orderType == 0 ? round(change * data.price) : change;
+
+            let hasMoney = false;
+
+            if (data.orderType == 0 && balances[0].balanceUSD - balances[0].reservedUSD > change) {
+                hasMoney = true;
+                reserved = 'reservedUSD';
+
+            }
+            if (data.orderType == 1 && balances[0].balanceETH - balances[0].reservedETH > change) {
+                hasMoney = true;
+                reserved = 'reservedETH';
+            }
+
+            if (hasMoney) {
+                order.amount = data.amount;
+                order.originalAmount = data.amount;
+
+                // Update 'reserved' amount in database
+                let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" + ${change} WHERE "id" = ${mmConf.ID}`;
+                await db.query(updateUserBalance);
+
+                let emitType = data.orderType == 0 ? 'bid' : 'ask';
+                console.log(emitType + ' UPDATED at ' + data.price + ' from ' + originalAmount + ' to ' + data.amount + ' by ' + data.user.id);
+
+                io.emit('changeOrder', { change: data.change, price: data.price, emitType, OB: orderBook });
+            }
+
+            break;
+        }
+    }
+
+
+
+    processing = false;
+}
+
 
 // The server side order book shows every single user's submissions, but the client side one 
 //      shows total orders on every individual price. Thus the book has to be compressed
@@ -551,6 +613,7 @@ module.exports = {
     que,
     executing,
     executeTasks,
-    orderBook
+    orderBook,
+    changeOrder
 
 }

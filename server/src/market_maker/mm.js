@@ -63,6 +63,16 @@ function fillBooks() {
     fillSide('asks')
 
     trade.executeTasks();
+
+    setTimeout(() => {
+        trade.que.push(createOrderObj('changeOrder', 20, bids[0], 0))
+        trade.que.push(createOrderObj('changeOrder', 30, bids[0], 0))
+
+        trade.que.push(createOrderObj('changeOrder', 25, asks[2], 1))
+
+        trade.executeTasks();
+    }, 3000);
+
 }
 
 function fillSide(side) {
@@ -112,10 +122,10 @@ function round(num) {
 
 
 
-// Fetch the current 1min candle opening price every 1.5s after the last minute has closed
-// The delay to allows the ping to be 1500ms at max. Can be changed if needed.
+// Fetch the current 1min candle opening price every 2s after the last minute has closed
+// The delay to allows the ping to be 2000ms at max. Can be changed if needed.
 let minute = 60 * 1000;
-const DELAY = 1500 // ms
+const DELAY = 1200 // ms
 function get1mOpen() {
     setTimeout(() => {
         binance.candlesticks("BTCUSDT", "1m", (error, ticks, symbol) => {

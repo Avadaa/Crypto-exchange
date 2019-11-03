@@ -56,14 +56,11 @@ socket.on('addOrder', async (data) => {
     if (data.order.amount > 0) {
         let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
-        if (data.type == 'bid') {
-            if (data.userID == user.id) {
-                user.availableUSD -= data.order.price * data.order.amount;
-                document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
-            }
-
-
+        if (data.userID == user.id && data.type == 'bid') {
+            user.availableUSD -= data.order.price * data.order.amount;
+            document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
         }
+
         if (data.userID == user.id && data.type == 'ask') {
 
             user.availableETH -= data.order.amount;
@@ -116,7 +113,7 @@ socket.on('removeOrder', async (data) => {
 
     if (data.id == user.id) {
 
-        if (data.userClicked)
+        if (!data.isMM && user.id != data.userClicked)
             cancelInHistory({ orderIds: data.orderIds });
 
         if (data.userClicked && side == 'bid') {
@@ -168,6 +165,22 @@ socket.on('marketOrder', async (data) => {
 
     }
 });
+
+
+socket.on('changeOrder', (data) => {
+    console.log(data)
+    OB = data.OB
+    let rows = $($(`#${data.emitType}`).children()[0]).children()
+    for (let i = 1; i < rows.length; i++) {
+        let rowPrice = $(rows[i]).children()[0].innerText;
+        if (rowPrice == data.price) {
+            let current = Number($(rows[i]).children()[1].innerText);
+            current = current + data.change;
+            console.log(current)
+            $(rows[i]).children()[1].innerText = current;
+        }
+    }
+})
 
 // Add new entry on local history
 socket.on('historyInfo', (data) => {
