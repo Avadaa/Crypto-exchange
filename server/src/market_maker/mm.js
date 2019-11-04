@@ -14,7 +14,7 @@ let asks = [];
 
 current1mOpen = 0;
 currentHeavy = ''
-
+/*
 setTimeout(() => {
     console.log('Streaming BTCUSDT from BINANCE')
     /*binance.websockets.trades(['BTCUSDT'], (trades) => {
@@ -36,15 +36,9 @@ setTimeout(() => {
 
         updateIndex()
 
-    });*/
+    });
 
 
-    setTimeout(() => {
-        index += 5;
-
-        if (index > asks[0])
-            moveUp();
-    }, 2000);
 
 
 
@@ -126,16 +120,9 @@ function fillBooks() {
 
     trade.executeTasks();
 
-    /*
-    setTimeout(() => {
-        trade.que.push(createOrderObj('changeOrder', 20, bids[0], 0))
-        trade.que.push(createOrderObj('changeOrder', 30, bids[0], 0))
 
-        trade.que.push(createOrderObj('changeOrder', 25, asks[2], 1))
 
-        trade.executeTasks();
-    }, 3000);
-    */
+
 
 }
 
@@ -265,3 +252,4 @@ module.exports = {
 
     }
 }
+*/
