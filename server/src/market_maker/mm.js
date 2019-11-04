@@ -13,6 +13,7 @@ let bids = [];
 let asks = [];
 
 current1mOpen = 0;
+currentHeavy = ''
 
 setTimeout(() => {
     console.log('Streaming BTCUSDT from BINANCE')
@@ -20,12 +21,30 @@ setTimeout(() => {
         index = Number(trades.p);
 
 
-        //if (index > asks[0])
-        //    moveUp();
+
+        if (index > asks[0])
+            moveUp();
+
+        if (index < current1mOpen && currentHeavy == 'bid') {
+            currentHeavy = 'ask'
+            askHeavy();
+        }
+        if (index > current1mOpen && currentHeavy == 'ask') {
+            currentHeavy = 'bid'
+            askHeavy();
+        }
 
         updateIndex()
 
     });*/
+
+
+    setTimeout(() => {
+        index += 5;
+
+        if (index > asks[0])
+            moveUp();
+    }, 2000);
 
 
 
@@ -36,9 +55,9 @@ function updateIndex() {
     trade.io.emit('updateIndex', ({ index }))
 }
 
-function moveUp(index) {
+function moveUp() {
 
-    /*
+
     let amountToBuy = 0;
 
     for (let i = 0; i < trade.orderBook[1].length; i++) {
@@ -50,11 +69,54 @@ function moveUp(index) {
     trade.que.push(marketObj);
 
 
+
+
+    let price = index + 4 * mmConf.SPREADBETWEEN;
+
+    asks.shift();
+    asks[4] = price;
+
+    let obj = createOrderObj('addOrder', 0, price, 1);
+    trade.que.push(obj)
+
+    obj = createOrderObj('removeOrder', 0, bids[4], 0);
+    trade.que.push(obj);
+
+
+    obj = createOrderObj('addOrder', 0, index - (mmConf.SPREAD / 2), 0)
+    trade.que.push(obj);
+
+
+    bids[0] = index - (mmConf.SPREAD / 2);
+
     trade.executeTasks();
-    */
+
+    setTimeout(() => {
+        weighBooks()
+
+    }, 500);
 
 
 }
+
+function weighBooks() {
+    if (currentHeavy == 'bid')
+        for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
+            trade.que.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), asks[i], 1));
+            trade.que.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), bids[i], 0));
+
+        }
+
+    if (currentHeavy == 'ask')
+        for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
+            trade.que.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), asks[i], 1));
+            trade.que.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), bids[i], 0));
+
+        }
+    trade.executeTasks()
+}
+
+
 
 
 function fillBooks() {
@@ -64,6 +126,7 @@ function fillBooks() {
 
     trade.executeTasks();
 
+    /*
     setTimeout(() => {
         trade.que.push(createOrderObj('changeOrder', 20, bids[0], 0))
         trade.que.push(createOrderObj('changeOrder', 30, bids[0], 0))
@@ -72,6 +135,7 @@ function fillBooks() {
 
         trade.executeTasks();
     }, 3000);
+    */
 
 }
 
@@ -89,7 +153,7 @@ function fillSide(side) {
         if (side == 'asks')
             asks[i] = price;
 
-        let amount = round(mmConf.FIRSTAMOUNT * Math.pow(mmConf.MULTIPLIER, i));
+        let amount = 0;
 
         let orderType = side == 'bids' ? 0 : 1;
 
@@ -112,7 +176,8 @@ function createOrderObj(task, amount, price, orderType) {
             id: mmConf.ID,
             userId: mmConf.ID
         },
-        orderType
+        orderType,
+        side: orderType == 0 ? 'bid' : 'ask'
     }
 }
 
@@ -176,12 +241,27 @@ module.exports = {
         });
 
 
-        binance.prices('BTCUSDT', (err, ticker) => {
+        binance.prices('BTCUSDT', async (err, ticker) => {
             if (err) console.log('ERROR geting Binance price')
             index = Number(ticker.BTCUSDT)
             fillBooks();
+
+            get1mOpen()
+
+            setTimeout(() => {
+                if (index < current1mOpen)
+                    currentHeavy = 'ask'
+
+                else
+                    currentHeavy = 'bid'
+
+                weighBooks();
+
+            }, 1000);
         });
 
-        get1mOpen()
-    },
+
+
+
+    }
 }

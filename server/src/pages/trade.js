@@ -43,6 +43,7 @@ io.on('connect', async (socket) => {
 
     socket.on('order', (data) => {
 
+
         que.push(data);
         if (!executing)
             executeTasks();
@@ -488,7 +489,6 @@ async function changeOrder(data) {
     let originalAmount;
 
     let reserved = '';
-
     for (let order of orderBook[data.orderType]) {
         if (order.price == data.price) {
 
