@@ -26,15 +26,15 @@
         <div id="pwDiv">
           <div>
             <label for="pw-current">Current password</label>
-            <input type="text" name="pw-current" v-model="pwCurr" autocomplete="off" />
+            <input type="password" name="pw-current" v-model="pwCurr" autocomplete="off" />
           </div>
           <div>
             <label for="pw-new">New password</label>
-            <input type="text" name="pw-new" v-model="pwNew" autocomplete="off" />
+            <input type="password" name="pw-new" v-model="pwNew" autocomplete="off" />
           </div>
           <div>
             <label for="pw-new-confirm">Confirm new password</label>
-            <input type="text" name="pw-new-confirm" v-model="pwNewConfirm" autocomplete="off" />
+            <input type="password" name="pw-new-confirm" v-model="pwNewConfirm" autocomplete="off" />
           </div>
           <button v-on:click="changePw();">Change password</button>
           <p id="pwChangeErrors">Err</p>
