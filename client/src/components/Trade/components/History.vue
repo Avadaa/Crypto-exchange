@@ -34,11 +34,14 @@ export default {
   methods: {},
   async created() {
     this.trade = require("../trade");
-
-    let orderHistory = await auth.history({
-      userId: this.$store.state.user.userId
-    });
-    this.trade.drawHistory(orderHistory.data);
+    setTimeout(async () => {
+      if (this.$store.state.isUserLoggedIn) {
+        let orderHistory = await auth.history({
+          userId: this.$store.state.user.userId
+        });
+        this.trade.drawHistory(orderHistory.data);
+      }
+    }, 300);
   },
   async mounted() {}
 };

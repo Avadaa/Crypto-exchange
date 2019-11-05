@@ -104,35 +104,52 @@ export default {
   },
 
   async created() {
-    this.trade = require("./trade");
-
-    let userWallets = await auth.user({
-      userId: this.$store.state.user.userId,
-      username: this.$store.state.user.username
+    let validToken = await auth.checkToken({
+      token: this.$store.state.token,
+      userId: this.$store.state.user.userId
     });
-    userWallets = userWallets.data.balance;
+    if (validToken.data) {
+      this.trade = require("./trade");
 
-    let user = this.$store.state.user;
-    user = {
-      address: user.address,
-      userId: user.userId,
-      username: user.username,
-      balanceUSD: userWallets.balanceUSD,
-      balanceETH: userWallets.balanceETH,
-      reservedUSD: userWallets.reservedUSD,
-      reservedETH: userWallets.reservedETH
-    };
+      let userWallets = await auth.user({
+        userId: this.$store.state.user.userId,
+        username: this.$store.state.user.username
+      });
+      userWallets = userWallets.data.balance;
 
-    this.trade.receiveUserInfo(user);
+      let user = this.$store.state.user;
+      user = {
+        address: user.address,
+        userId: user.userId,
+        username: user.username,
+        balanceUSD: userWallets.balanceUSD,
+        balanceETH: userWallets.balanceETH,
+        reservedUSD: userWallets.reservedUSD,
+        reservedETH: userWallets.reservedETH
+      };
 
-    // Set user's balance on page load after logging in
-    if (this.$store.state.isUserLoggedIn && this.$store.state.user.userId > 0) {
-      document.getElementById(
-        "ethAvailable"
-      ).innerText = `ETH: ${userWallets.balanceETH - userWallets.reservedETH}`;
-      document.getElementById(
-        "usdAvailable"
-      ).innerText = `USD: ${userWallets.balanceUSD - userWallets.reservedUSD}`;
+      this.trade.receiveUserInfo(user);
+
+      // Set user's balance on page load after logging in
+      if (
+        this.$store.state.isUserLoggedIn &&
+        this.$store.state.user.userId > 0
+      ) {
+        document.getElementById(
+          "ethAvailable"
+        ).innerText = `ETH: ${userWallets.balanceETH -
+          userWallets.reservedETH}`;
+        document.getElementById(
+          "usdAvailable"
+        ).innerText = `USD: ${userWallets.balanceUSD -
+          userWallets.reservedUSD}`;
+      }
+    } else {
+      this.$store.dispatch("setToken");
+
+      localStorage.clear();
+
+      this.$router.push("/");
     }
   },
   async mounted() {

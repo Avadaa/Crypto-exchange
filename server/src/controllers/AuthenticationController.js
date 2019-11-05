@@ -191,12 +191,22 @@ module.exports = {
         })
     },
     async checkToken(req, res) {
-        jwt.verify(req.body.token, cookiesConf.secret, (err, data) => {
-            if (err) throw err;
-            if (data.userId == req.body.userId)
-                res.send(true);
-            else
-                res.send(false);
-        })
+        try {
+            jwt.verify(req.body.token, cookiesConf.secret, (err, data) => {
+                if (err) {
+                    res.send(false);
+                    throw err;
+                };
+                if (data.userId == req.body.userId)
+                    res.send(true);
+                else
+                    res.send(false);
+            })
+        }
+        catch (e) {
+            console.log('User ' + req.body.userId + ' failed to authenticate')
+
+        }
+
     }
 }

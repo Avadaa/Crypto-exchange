@@ -44,6 +44,20 @@ export default {
     }
   },
 
+  async created() {
+    let validToken = await auth.checkToken({
+      token: this.$store.state.token,
+      userId: this.$store.state.user.userId
+    });
+    if (!validToken.data) {
+      this.$store.dispatch("setToken");
+
+      localStorage.clear();
+
+      this.$router.push("/");
+    }
+  },
+
   async mounted() {
     const res = await auth.deposit({
       userId: this.$store.state.user.userId
