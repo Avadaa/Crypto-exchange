@@ -195,6 +195,8 @@ module.exports = {
             jwt.verify(req.body.token, cookiesConf.secret, (err, data) => {
                 if (err) {
                     res.send(false);
+                    console.log('User ' + req.body.userId + ' failed to authenticate')
+
                     throw err;
                 };
                 if (data.userId == req.body.userId)

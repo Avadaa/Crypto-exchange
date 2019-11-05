@@ -112,8 +112,7 @@ socket.on('removeOrder', async (data) => {
     }
 
     if (data.id == user.id) {
-
-        if (!data.isMM && user.id != data.userClicked)
+        if (!data.isMM && data.userClicked)
             cancelInHistory({ orderIds: data.orderIds });
 
         if (data.userClicked && side == 'bid') {
@@ -168,7 +167,6 @@ socket.on('marketOrder', async (data) => {
 
 
 socket.on('changeOrder', (data) => {
-    console.log(data)
     OB = data.OB
     let rows = $($(`#${data.emitType}`).children()[0]).children()
     for (let i = 1; i < rows.length; i++) {
@@ -176,7 +174,6 @@ socket.on('changeOrder', (data) => {
         if (rowPrice == data.price) {
             let current = Number($(rows[i]).children()[1].innerText);
             current = current + data.change;
-            console.log(current)
             $(rows[i]).children()[1].innerText = current;
         }
     }
@@ -329,8 +326,6 @@ function addHistory(data) {
 
 function editLimitSideHistory(data) {
 
-    console.log(data)
-    console.log($(`#history-${data.orderId}`))
     $(`#history-${data.orderId}`).children()[5].innerText = data.orderStatus;
     $(`#history-${data.orderId}`).children()[2].innerText = data.filled;
 }
