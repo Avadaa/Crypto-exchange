@@ -29,6 +29,6 @@ module.exports = (app) => {
     app.post('/api/user/changename', AuthenticationController.changeName);
     app.post('/api/user/changepw', AuthenticationControllerPolicy.changePw,
         AuthenticationController.changePw);
-
+    app.post('/api/user/checktoken', AuthenticationController.checkToken);
 
 }

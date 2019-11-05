@@ -4,7 +4,8 @@ const Trade = require('../pages/trade.js')
 const db = require('../dbQueries');
 const ethereum = require('../Ethereum/ethereum')
 const ethereumConfig = require('../../config/ethereum')
-
+const jwt = require('jsonwebtoken')
+const cookiesConf = require('../../config/cookies')
 
 
 module.exports = {
@@ -187,6 +188,15 @@ module.exports = {
 
                 res.send({ success, msg });
             }
+        })
+    },
+    async checkToken(req, res) {
+        jwt.verify(req.body.token, cookiesConf.secret, (err, data) => {
+            if (err) throw err;
+            if (data.userId == req.body.userId)
+                res.send(true);
+            else
+                res.send(false);
         })
     }
 }

@@ -40,6 +40,9 @@ export default {
     },
     changePw(userInfo) {
         return Api().post('api/user/changepw', userInfo);
+    },
+    checkToken(tokenInfo) {
+        return Api().post('api/user/checktoken', tokenInfo);
     }
 
 }
