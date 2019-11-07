@@ -33,33 +33,30 @@ io.on('connect', async (socket) => {
 
     setTimeout(() => {
         socket.emit('transmitOB', { OB: orderBook, currentPrice });
-
-
-
     }, 200);
 
-
-
-
     socket.on('order', (data) => {
-
-
-        que.push(data);
-        if (!executing)
-            executeTasks();
+        push(data);
     });
 
 })
 
+function push(data) {
+    que.push(data);
+    if (!executing)
+        executeTasks();
+}
+
 async function executeTasks() {
     executing = true;
+
     while (que.length > 0) {
         if (!processing) {
-
             await processQue(que[0]);
 
             que.shift();
         }
+
     }
 
     executing = false;
@@ -519,7 +516,7 @@ async function changeOrder(data) {
                 await db.query(updateUserBalance);
 
                 let emitType = data.orderType == 0 ? 'bid' : 'ask';
-                console.log(emitType + ' UPDATED at ' + data.price + ' from ' + originalAmount + ' to ' + data.amount + ' by ' + data.user.id);
+                //console.log(emitType + ' UPDATED at ' + data.price + ' from ' + originalAmount + ' to ' + data.amount + ' by ' + data.user.id);
 
                 io.emit('changeOrder', { change: data.change, price: data.price, emitType, OB: orderBook });
             }
@@ -614,6 +611,9 @@ module.exports = {
     executing,
     executeTasks,
     orderBook,
-    changeOrder
+    changeOrder,
+    processing,
+    processQue,
+    push
 
 }

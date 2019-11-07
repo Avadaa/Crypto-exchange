@@ -14,34 +14,63 @@ let asks = [];
 
 current1mOpen = 0;
 currentHeavy = ''
+
+
+
+
+
+let mmQue = [];
+function pushTrade() {
+    while (mmQue.length > 0)
+        if (!trade.processing)
+            trade.push(mmQue.shift());
+}
+
 /*
+index = 9000;
+current1mOpen = 9010;
+fillBooks();
+
+
+if (index < current1mOpen)
+    currentHeavy = 'ask'
+
+else
+    currentHeavy = 'bid'
+
+weighBooks();
+
+setTimeout(() => {
+    index = 8995;
+    if (index > asks[0])
+        moveUp();
+    if (index < bids[0])
+        moveDown();
+}, 5000);
+*/
+
+
+
 setTimeout(() => {
     console.log('Streaming BTCUSDT from BINANCE')
-    /*binance.websockets.trades(['BTCUSDT'], (trades) => {
+    binance.websockets.trades(['BTCUSDT'], (trades) => {
         index = Number(trades.p);
 
 
 
         if (index > asks[0])
             moveUp();
+        if (index < bids[0])
+            moveDown();
 
-        if (index < current1mOpen && currentHeavy == 'bid') {
-            currentHeavy = 'ask'
-            askHeavy();
-        }
-        if (index > current1mOpen && currentHeavy == 'ask') {
-            currentHeavy = 'bid'
-            askHeavy();
-        }
+        if (index < current1mOpen && currentHeavy == 'bid')
+            weighBooks();
+        if (index > current1mOpen && currentHeavy == 'ask')
+            weighBooks();
 
         updateIndex()
 
     });
-
-
-
-
-
 }, 1000);
 
 
@@ -52,62 +81,88 @@ function updateIndex() {
 function moveUp() {
 
 
-    let amountToBuy = 0;
+    let obj = createOrderObj('removeOrder', 0, asks[0], 1);
+    mmQue.push(obj);
 
-    for (let i = 0; i < trade.orderBook[1].length; i++) {
-        if (trade.orderBook[1][i].price > asks[0])
-            break;
-        amountToBuy = round(amountToBuy + trade.orderBook[1][i].amount);
-    }
-    let marketObj = createOrderObj('marketOrder', amountToBuy, -1, 0);
-    trade.que.push(marketObj);
+    let askPrice = asks[4] + mmConf.SPREADBETWEEN;
+    let bidPrice = asks[0] - mmConf.SPREAD;
 
-
-
-
-    let price = index + 4 * mmConf.SPREADBETWEEN;
 
     asks.shift();
-    asks[4] = price;
+    asks[4] = askPrice;
 
-    let obj = createOrderObj('addOrder', 0, price, 1);
-    trade.que.push(obj)
+    obj = createOrderObj('addOrder', 0, askPrice, 1);
+    mmQue.push(obj)
+
+
 
     obj = createOrderObj('removeOrder', 0, bids[4], 0);
-    trade.que.push(obj);
+    mmQue.push(obj);
+    bids.pop();
+
+    obj = createOrderObj('addOrder', 0, bidPrice, 0)
+    mmQue.push(obj);
 
 
-    obj = createOrderObj('addOrder', 0, index - (mmConf.SPREAD / 2), 0)
-    trade.que.push(obj);
+    bids.unshift(bidPrice);
+
+    pushTrade();
+
+    weighBooks()
+}
+
+function moveDown() {
 
 
-    bids[0] = index - (mmConf.SPREAD / 2);
+    let obj = createOrderObj('removeOrder', 0, bids[0], 0);
+    mmQue.push(obj);
 
-    trade.executeTasks();
-
-    setTimeout(() => {
-        weighBooks()
-
-    }, 500);
+    let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
+    let askPrice = bids[0] + mmConf.SPREAD;
 
 
+    bids.shift();
+    bids[4] = bidPrice;
+
+    obj = createOrderObj('addOrder', 0, bidPrice, 0);
+    mmQue.push(obj)
+
+
+
+    obj = createOrderObj('removeOrder', 0, asks[4], 1);
+    mmQue.push(obj);
+    asks.pop();
+
+    obj = createOrderObj('addOrder', 0, askPrice, 1)
+    mmQue.push(obj);
+
+
+    asks.unshift(askPrice);
+
+    pushTrade();
+
+    weighBooks()
 }
 
 function weighBooks() {
-    if (currentHeavy == 'bid')
+    if (currentHeavy == 'bid') {
         for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
-            trade.que.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), asks[i], 1));
-            trade.que.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), bids[i], 0));
-
+            mmQue.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), asks[i], 1));
+            mmQue.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), bids[i], 0));
         }
+        currentHeavy = 'ask';
+    }
 
-    if (currentHeavy == 'ask')
+
+    else if (currentHeavy == 'ask') {
         for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
-            trade.que.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), asks[i], 1));
-            trade.que.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), bids[i], 0));
-
+            mmQue.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), asks[i], 1));
+            mmQue.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), bids[i], 0));
         }
-    trade.executeTasks()
+        currentHeavy = 'bid';
+    }
+
+    pushTrade()
 }
 
 
@@ -118,12 +173,7 @@ function fillBooks() {
     fillSide('bids')
     fillSide('asks')
 
-    trade.executeTasks();
-
-
-
-
-
+    pushTrade();
 }
 
 function fillSide(side) {
@@ -131,9 +181,9 @@ function fillSide(side) {
 
         let price;
         if (side == 'bids')
-            price = round(index - (mmConf.SPREAD / 2) - i * mmConf.SPREADBETWEEN);
+            price = round(index - (mmConf.SPREAD) - i * mmConf.SPREADBETWEEN);
         if (side == 'asks')
-            price = round(index + (mmConf.SPREAD / 2) + i * mmConf.SPREADBETWEEN);
+            price = round(index + (mmConf.SPREAD) + i * mmConf.SPREADBETWEEN);
 
         if (side == 'bids')
             bids[i] = price;
@@ -145,7 +195,7 @@ function fillSide(side) {
         let orderType = side == 'bids' ? 0 : 1;
 
         let obj = createOrderObj('addOrder', amount, price, orderType);
-        trade.que.push(obj);
+        mmQue.push(obj);
     }
 }
 
@@ -176,8 +226,9 @@ function round(num) {
 
 // Fetch the current 1min candle opening price every 2s after the last minute has closed
 // The delay to allows the ping to be 2000ms at max. Can be changed if needed.
+
 let minute = 60 * 1000;
-const DELAY = 1200 // ms
+const DELAY = 3000 // ms
 function get1mOpen() {
     setTimeout(() => {
         binance.candlesticks("BTCUSDT", "1m", (error, ticks, symbol) => {
@@ -206,15 +257,9 @@ repeatEvery(get1mOpen, minute)
 
 
 
-
-
-
-
-
-
-
 module.exports = {
     async initiate() {
+
         let keyQuery = 'SELECT * FROM mm_keys';
         let keys = await db.query(keyQuery)
 
@@ -247,9 +292,5 @@ module.exports = {
             }, 1000);
         });
 
-
-
-
     }
 }
-*/

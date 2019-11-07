@@ -53,35 +53,33 @@ socket.on('updateIndex', async (data) => {
 
 
 socket.on('addOrder', async (data) => {
-    if (data.order.amount > 0) {
-        let matchingPriceAmount = matchingPrices(data.type, data.order.price);
+    let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
-        if (data.userID == user.id && data.type == 'bid') {
-            user.availableUSD -= data.order.price * data.order.amount;
-            document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
-        }
-
-        if (data.userID == user.id && data.type == 'ask') {
-
-            user.availableETH -= data.order.amount;
-            document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
-        }
-
-        if (matchingPriceAmount == false) {
-            let html = `<tr><td class="order-price">${data.order.price}</td><td class="order-amount">${data.order.amount}</td><td class="order-remove-invisible">X</td></tr>`
-            $(`#${data.type} tbody > tr:eq(${data.index})`).after(html)
-        }
-        else {
-            let children = $(`#${data.type} tbody`).children();
-            $(children[matchingPriceAmount.index]).children()[1].innerText = round((Number(matchingPriceAmount.amount) + Number(data.order.amount)));
-
-        }
-
-        OB = data.OB;
-        findOwnOrders();
-        if (data.historyId != null && data.userID == user.id)
-            addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
+    if (data.userID == user.id && data.type == 'bid') {
+        user.availableUSD -= data.order.price * data.order.amount;
+        document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
     }
+
+    if (data.userID == user.id && data.type == 'ask') {
+
+        user.availableETH -= data.order.amount;
+        document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
+    }
+
+    if (matchingPriceAmount == false) {
+        let html = `<tr><td class="order-price">${data.order.price}</td><td class="order-amount">${data.order.amount}</td><td class="order-remove-invisible">X</td></tr>`
+        $(`#${data.type} tbody > tr:eq(${data.index})`).after(html)
+    }
+    else {
+        let children = $(`#${data.type} tbody`).children();
+        $(children[matchingPriceAmount.index]).children()[1].innerText = round((Number(matchingPriceAmount.amount) + Number(data.order.amount)));
+
+    }
+
+    OB = data.OB;
+    findOwnOrders();
+    if (data.historyId != null && data.userID == user.id)
+        addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
 });
 
 socket.on('removeOrder', async (data) => {
@@ -279,7 +277,7 @@ function matchingPrices(side, price) {
 
 export function findOwnOrders() {
     let prices = [[], []];
-
+    console.log(user.id)
     for (let i = 0; i < 2; i++)
         for (let j = 0; j < OB[i].length; j++)
             if (OB[i][j].id == user.id && !prices[i].includes(OB[i][j].price))
