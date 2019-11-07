@@ -98,8 +98,11 @@ socket.on('removeOrder', async (data) => {
             }
 
             // If a certain price has multiple orders from multiple users, just update the amount
-            if (Number($(rows[i]).children()[1].innerText) > data.amount)
+            if (Number($(rows[i]).children()[1].innerText) > data.amount) {
                 $(rows[i]).children()[1].innerText = round((Number($(rows[i]).children()[1].innerText) - data.amount));
+                if (Number($(rows[i]).children()[1].innerText < 0.000001))
+                    $(rows[i]).remove();
+            }
 
             // If not, remove the whole row-element
             else

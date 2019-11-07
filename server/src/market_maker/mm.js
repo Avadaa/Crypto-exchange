@@ -15,7 +15,8 @@ let asks = [];
 current1mOpen = 0;
 currentHeavy = ''
 
-
+let marketBought = 0;
+let marketSold = 0;
 
 
 
@@ -80,68 +81,101 @@ function updateIndex() {
 
 function moveUp() {
 
+    if (trade.orderBook[1][0].price <= asks[0] - mmConf.SPREAD) {
+        let indexToOrderSpread = index - trade.orderBook[1][0].price;
+        if (indexToOrderSpread > mmConf.MAKERFEE * index) {
+            let amountToBuy = Math.pow(indexToOrderSpread, mmConf.MARKETPOW) * mmConf.MARKETMULTIPLY - marketBought;
+            if (trade.orderBook[1][0].amount < amountToBuy)
+                amountToBuy = trade.orderBook[1][0].amount;
+            if (amountToBuy > 0) {
+                marketBought += amountToBuy;
+                let obj = createOrderObj('marketOrder', amountToBuy, trade.orderBook[1][0].price, 0);
+                mmQue.push(obj);
+            }
+        }
+    }
+    else {
+        marketBought = 0;
 
-    let obj = createOrderObj('removeOrder', 0, asks[0], 1);
-    mmQue.push(obj);
+        let obj = createOrderObj('removeOrder', 0, asks[0], 1);
+        mmQue.push(obj);
 
-    let askPrice = asks[4] + mmConf.SPREADBETWEEN;
-    let bidPrice = asks[0] - mmConf.SPREAD;
-
-
-    asks.shift();
-    asks[4] = askPrice;
-
-    obj = createOrderObj('addOrder', 0, askPrice, 1);
-    mmQue.push(obj)
+        let askPrice = asks[4] + mmConf.SPREADBETWEEN;
+        let bidPrice = asks[0] - mmConf.SPREAD;
 
 
+        asks.shift();
+        asks[4] = askPrice;
 
-    obj = createOrderObj('removeOrder', 0, bids[4], 0);
-    mmQue.push(obj);
-    bids.pop();
-
-    obj = createOrderObj('addOrder', 0, bidPrice, 0)
-    mmQue.push(obj);
+        obj = createOrderObj('addOrder', 0, askPrice, 1);
+        mmQue.push(obj)
 
 
-    bids.unshift(bidPrice);
 
-    pushTrade();
+        obj = createOrderObj('removeOrder', 0, bids[4], 0);
+        mmQue.push(obj);
+        bids.pop();
 
-    weighBooks()
+        obj = createOrderObj('addOrder', 0, bidPrice, 0)
+        mmQue.push(obj);
+
+
+        bids.unshift(bidPrice);
+
+        pushTrade();
+
+        weighBooks()
+    }
 }
 
 function moveDown() {
 
-
-    let obj = createOrderObj('removeOrder', 0, bids[0], 0);
-    mmQue.push(obj);
-
-    let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
-    let askPrice = bids[0] + mmConf.SPREAD;
-
-
-    bids.shift();
-    bids[4] = bidPrice;
-
-    obj = createOrderObj('addOrder', 0, bidPrice, 0);
-    mmQue.push(obj)
-
-
-
-    obj = createOrderObj('removeOrder', 0, asks[4], 1);
-    mmQue.push(obj);
-    asks.pop();
-
-    obj = createOrderObj('addOrder', 0, askPrice, 1)
-    mmQue.push(obj);
+    if (trade.orderBook[0][0].price >= bids[0] + mmConf.SPREAD) {
+        let indexToOrderSpread = trade.orderBook[0][0].price - index;
+        if (indexToOrderSpread > mmConf.MAKERFEE * index) {
+            let amountToSell = Math.pow(indexToOrderSpread, mmConf.MARKETPOW) * mmConf.MARKETMULTIPLY - marketSold;
+            if (trade.orderBook[0][0].amount < amountToSell)
+                amountToSell = trade.orderBook[0][0].amount;
+            if (amountToSell > 0) {
+                marketSold += amountToSell;
+                let obj = createOrderObj('marketOrder', amountToSell, trade.orderBook[0][0].price, 1);
+                mmQue.push(obj);
+            }
+        }
+    }
+    else {
+        marketSold = 0;
 
 
-    asks.unshift(askPrice);
+        let obj = createOrderObj('removeOrder', 0, bids[0], 0);
+        mmQue.push(obj);
 
-    pushTrade();
+        let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
+        let askPrice = bids[0] + mmConf.SPREAD;
 
-    weighBooks()
+
+        bids.shift();
+        bids[4] = bidPrice;
+
+        obj = createOrderObj('addOrder', 0, bidPrice, 0);
+        mmQue.push(obj)
+
+
+
+        obj = createOrderObj('removeOrder', 0, asks[4], 1);
+        mmQue.push(obj);
+        asks.pop();
+
+        obj = createOrderObj('addOrder', 0, askPrice, 1)
+        mmQue.push(obj);
+
+
+        asks.unshift(askPrice);
+
+        pushTrade();
+
+        weighBooks()
+    }
 }
 
 function weighBooks() {

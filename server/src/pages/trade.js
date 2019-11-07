@@ -166,8 +166,8 @@ async function addOrder(data) {
             await db.query(updateUserBalance);
 
 
-
-            console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
+            if (OBobject.id != mmConf.ID)
+                console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
 
             //--------------------------------5--------------------------------
             let historyId = [{ id: null }];
@@ -278,7 +278,8 @@ async function removeOrder(data) {
         orderIds: removedOrderIds,
         isMM
     })
-    console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
+    if (data.user.id != mmConf.ID)
+        console.log(data.side + ' DEL at ' + data.price + ' for ' + amountRemoved + ' by ' + data.user.id)
 }
 
 // Making an actual trade (market order)
@@ -391,7 +392,7 @@ async function marketOrder(data) {
             let orderStatus = null;
             let amountFilled = null;
             if (mmConf.ID != OBrow.id) {
-                orderStatus = OBrow.amount == 0 ? 'Filled' : 'Partially filled'
+                orderStatus = OBrow.amount < 0.000001 ? 'Filled' : 'Partially filled'
                 amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
                 let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
                 await db.query(makerHistoryQuery);
@@ -613,7 +614,7 @@ module.exports = {
     orderBook,
     changeOrder,
     processing,
-    processQue,
-    push
+    push,
+    orderBook
 
 }
