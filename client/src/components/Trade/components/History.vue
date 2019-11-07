@@ -49,7 +49,7 @@ export default {
 
 <style scoped lang="scss">
 #history {
-  width: 905px;
+  width: 965px;
   min-width: 300px;
   height: 200px;
   border: 2px solid white;
@@ -63,7 +63,7 @@ export default {
     overflow: auto;
     .title {
       position: sticky;
-      width: 905px;
+      width: 965px;
       font-weight: 200;
       top: 0;
       font-size: 70%;

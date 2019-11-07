@@ -231,7 +231,7 @@ export default {
 
   #orderbooks,
   #localHistory {
-    width: 400px;
+    width: 430px;
     border: 2px solid white;
     margin-left: 100px;
     margin-top: 20px;

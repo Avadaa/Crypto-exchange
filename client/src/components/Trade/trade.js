@@ -187,8 +187,12 @@ socket.on('historyInfo', (data) => {
 
         let classSide = data.side == 0 ? 'color: rgb(255, 164, 164);' : 'color: rgb(164, 255, 164);';
         let time = new Date();
-        let timeStamp = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
-        let html = `<tr style="${classSide}"><td style="font-size: 0.75em;">${timeStamp}</td><td>${data.price}</td><td>${data.amount}</td></tr>`
+        let hours = (time.getHours() < 10 ? '0' : '') + time.getHours();
+        let minutes = (time.getMinutes() < 10 ? '0' : '') + time.getMinutes();
+        let seconds = (time.getSeconds() < 10 ? '0' : '') + time.getSeconds();
+
+        let timeStamp = `${hours}:${minutes}:${seconds}`;
+        let html = `<tr style="${classSide} font-size: 0.75em;"><td>${timeStamp}</td><td>${data.price}</td><td>${data.amount}</td></tr>`
         $(`#historyTbody tr:first`).after(html);
 
         var scrollLocker = document.querySelector('#history');
@@ -280,7 +284,6 @@ function matchingPrices(side, price) {
 
 export function findOwnOrders() {
     let prices = [[], []];
-    console.log(user.id)
     for (let i = 0; i < 2; i++)
         for (let j = 0; j < OB[i].length; j++)
             if (OB[i][j].id == user.id && !prices[i].includes(OB[i][j].price))

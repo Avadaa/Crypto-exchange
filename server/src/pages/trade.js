@@ -406,7 +406,10 @@ async function marketOrder(data) {
             let marketSideOrderId = [{ id: null }];
             if (data.user.id != mmConf.ID) {
                 let time = new Date();
-                timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+                let hours = (time.getHours() < 10 ? '0' : '') + time.getHours();
+                let minutes = (time.getMinutes() < 10 ? '0' : '') + time.getMinutes();
+                let seconds = (time.getSeconds() < 10 ? '0' : '') + time.getSeconds();
+                timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${hours}:${minutes}:${seconds}`;
 
                 buySell = OBside == 0 ? 'sell' : 'buy';
                 let takerHistoryQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${data.user.id}', '${change}','${timeStamp}', '${buySell}', 'Market', 'Filled', '${OBrow.price}', '${change}') RETURNING id`;
