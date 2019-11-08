@@ -1,6 +1,7 @@
 const db = require('../dbQueries');
 const trade = require('../pages/trade')
 const mmConf = require('../../config/mm')
+const sleep = require('util').promisify(setTimeout)
 
 let binance;
 //https://www.npmjs.com/package/node-binance-api
@@ -12,12 +13,14 @@ let index;
 let bids = [];
 let asks = [];
 
-current1mOpen = 0;
-currentHeavy = ''
+let current1mOpen = 0;
+let currentHeavy = ''
 
 let marketBought = 0;
 let marketSold = 0;
 
+let bidAbsorb = 0;
+let askAbsorb = 0;
 
 
 let mmQue = [];
@@ -81,13 +84,18 @@ function updateIndex() {
 
 function moveUp() {
 
+    // Buying other traders' limit asks
     if (trade.orderBook[1][0].price <= asks[0] - mmConf.SPREAD) {
+
         let indexToOrderSpread = index - trade.orderBook[1][0].price;
-        if (indexToOrderSpread > mmConf.MAKERFEE * index) {
+        if (indexToOrderSpread > mmConf.TAKERFEE * index) {
+
             let amountToBuy = Math.pow(indexToOrderSpread, mmConf.MARKETPOW) * mmConf.MARKETMULTIPLY - marketBought;
+
             if (trade.orderBook[1][0].amount < amountToBuy)
                 amountToBuy = trade.orderBook[1][0].amount;
-            if (amountToBuy > 0) {
+
+            if (amountToBuy > 0 && trade.orderBook[1][0].id != mmConf.ID) {
                 marketBought += amountToBuy;
                 let obj = createOrderObj('marketOrder', amountToBuy, trade.orderBook[1][0].price, 0);
                 mmQue.push(obj);
@@ -96,47 +104,34 @@ function moveUp() {
     }
     else {
         marketBought = 0;
-
-        let obj = createOrderObj('removeOrder', 0, asks[0], 1);
-        mmQue.push(obj);
+        bidAbsorb = 0;
+        askAbsorb = 0;
 
         let askPrice = asks[4] + mmConf.SPREADBETWEEN;
         let bidPrice = asks[0] - mmConf.SPREAD;
 
-
-        asks.shift();
-        asks[4] = askPrice;
-
-        obj = createOrderObj('addOrder', 0, askPrice, 1);
-        mmQue.push(obj)
-
-
-
-        obj = createOrderObj('removeOrder', 0, bids[4], 0);
-        mmQue.push(obj);
-        bids.pop();
-
-        obj = createOrderObj('addOrder', 0, bidPrice, 0)
-        mmQue.push(obj);
-
-
-        bids.unshift(bidPrice);
+        asksUp(askPrice)
+        bidsUp(bidPrice)
 
         pushTrade();
-
         weighBooks()
     }
 }
 
 function moveDown() {
 
+    // Market selling into other users' bids
     if (trade.orderBook[0][0].price >= bids[0] + mmConf.SPREAD) {
+
         let indexToOrderSpread = trade.orderBook[0][0].price - index;
-        if (indexToOrderSpread > mmConf.MAKERFEE * index) {
+        if (indexToOrderSpread > mmConf.TAKERFEE * index) {
+
             let amountToSell = Math.pow(indexToOrderSpread, mmConf.MARKETPOW) * mmConf.MARKETMULTIPLY - marketSold;
+
             if (trade.orderBook[0][0].amount < amountToSell)
                 amountToSell = trade.orderBook[0][0].amount;
-            if (amountToSell > 0) {
+
+            if (amountToSell > 0 && trade.orderBook[0][0].id != mmConf.ID) {
                 marketSold += amountToSell;
                 let obj = createOrderObj('marketOrder', amountToSell, trade.orderBook[0][0].price, 1);
                 mmQue.push(obj);
@@ -145,38 +140,59 @@ function moveDown() {
     }
     else {
         marketSold = 0;
-
-
-        let obj = createOrderObj('removeOrder', 0, bids[0], 0);
-        mmQue.push(obj);
+        bidAbsorb = 0;
+        askAbsorb = 0;
 
         let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
         let askPrice = bids[0] + mmConf.SPREAD;
 
-
-        bids.shift();
-        bids[4] = bidPrice;
-
-        obj = createOrderObj('addOrder', 0, bidPrice, 0);
-        mmQue.push(obj)
-
-
-
-        obj = createOrderObj('removeOrder', 0, asks[4], 1);
-        mmQue.push(obj);
-        asks.pop();
-
-        obj = createOrderObj('addOrder', 0, askPrice, 1)
-        mmQue.push(obj);
-
-
-        asks.unshift(askPrice);
+        bidsDown(bidPrice)
+        asksDown(askPrice)
 
         pushTrade();
-
         weighBooks()
     }
 }
+
+async function absorbUp() {
+    askAbsorb = 0;
+
+    let askPrice = asks[4] + mmConf.SPREADBETWEEN;
+    asksUp(askPrice)
+
+    pushTrade()
+    weighBooks()
+
+
+    await sleep(mmConf.SLEEPAFTERABSORB)
+
+
+    askPrice = asks[0] - mmConf.SPREADBETWEEN;
+    asksDown(askPrice)
+
+    pushTrade();
+    weighBooks()
+}
+
+async function absorbDown() {
+    bidAbsorb = 0;
+
+    let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
+    bidsDown(bidPrice)
+
+    pushTrade()
+    weighBooks()
+
+
+    await sleep(mmConf.SLEEPAFTERABSORB)
+
+    bidPrice = bids[0] + mmConf.SPREADBETWEEN
+    bidsUp(bidPrice)
+
+    pushTrade()
+    weighBooks()
+}
+
 
 function weighBooks() {
     if (currentHeavy == 'bid') {
@@ -288,7 +304,19 @@ repeatEvery(get1mOpen, minute)
 
 
 
-
+// Just linking the bidAbsorb and askAbsorb didn't work
+function getBidAbsorb() {
+    return bidAbsorb;
+}
+function getAskAbsorb() {
+    return askAbsorb;
+}
+function setBidAbsorb(x) {
+    bidAbsorb += x;
+}
+function setAskAbsorb(x) {
+    askAbsorb += x;
+}
 
 
 module.exports = {
@@ -326,5 +354,57 @@ module.exports = {
             }, 1000);
         });
 
-    }
+    },
+    getBidAbsorb,
+    getAskAbsorb,
+    setBidAbsorb,
+    setAskAbsorb,
+    absorbDown,
+    absorbUp
+}
+
+function asksUp(price) {
+    let obj = createOrderObj('removeOrder', 0, asks[0], 1);
+    mmQue.push(obj);
+
+    asks.shift();
+    asks[4] = price;
+
+    obj = createOrderObj('addOrder', 0, price, 1);
+    mmQue.push(obj)
+}
+
+function asksDown(price) {
+    obj = createOrderObj('removeOrder', 0, asks[4], 1);
+    mmQue.push(obj);
+
+    asks.pop();
+
+    obj = createOrderObj('addOrder', 0, price, 1)
+    mmQue.push(obj);
+
+    asks.unshift(price);
+}
+
+function bidsUp(price) {
+    obj = createOrderObj('removeOrder', 0, bids[4], 0);
+    mmQue.push(obj);
+
+    bids.pop();
+
+    obj = createOrderObj('addOrder', 0, price, 0)
+    mmQue.push(obj);
+
+    bids.unshift(price);
+}
+
+function bidsDown(price) {
+    let obj = createOrderObj('removeOrder', 0, bids[0], 0);
+    mmQue.push(obj);
+
+    bids.shift();
+    bids[4] = price;
+
+    obj = createOrderObj('addOrder', 0, price, 0);
+    mmQue.push(obj)
 }

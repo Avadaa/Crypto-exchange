@@ -1,17 +1,16 @@
 module.exports = {
     ID: 132, // Market maker's user id
     SPREAD: 1, // (wanted spread - 2) USD
-    SPREADBETWEEN: 2.0, // spread between orders on one sids of the book
+    DEFAULTSPREAD: this.SPREAD,
+    SPREADBETWEEN: 2.0, // spread between orders on one sides of the book
 
     FIRSTAMOUNT: 10.0, // Amount in BTC how big the best order per side is
+    ABSORBAMOUNT: 10.0, // How many coins can a side take before the orders are moved further away
+    SLEEPAFTERABSORB: 5000, // How long before the spread is brought back to normal after a dump / pump into limits
 
     ORDERAMOUNT: 5, // How many layers of orders are there going to be in the book per side
-    MULTIPLIER: 1.5, // Bids for example: (SPREADBETWEEN = 4.0)
-    // $10000   10   BTC
-    // $ 9996   15   BTC 
-    // $ 9992   22.5 BTC
 
-    MAKERFEE: 0.00075,
+    TAKERFEE: 0.00075,
     MARKETPOW: 2,
     MARKETMULTIPLY: 0.1 // Forumla = spread to order ^ MARKETPOW * MARKETMULTIPLY
     // The formula tells how many coins the algo can buy / sell at market at that price

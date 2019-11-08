@@ -1,6 +1,10 @@
 const server = require('../server');
 const db = require('../dbQueries');
-let mm = require('../market_maker/mm')
+let mm;
+
+setTimeout(() => {
+    mm = require('../market_maker/mm')
+}, 200);
 let mmConf = require('../../config/mm')
 
 // Didn't get socket IO to work on client side without an 
@@ -420,7 +424,21 @@ async function marketOrder(data) {
                 buySell = buySell == 'sell' ? 'ask' : 'bid';
             }
 
-
+            if (OBrow.id == mmConf.ID) {
+                if (buySell == 'ask') {
+                    mm.setBidAbsorb(change);
+                    if (mm.getBidAbsorb() >= mmConf.FIRSTAMOUNT) {
+                        mm.absorbDown()
+                    }
+                }
+                if (buySell == 'bid') {
+                    mm.setAskAbsorb(change);
+                    mm.askAbsorb += change;
+                    if (mm.getAskAbsorb() >= mmConf.FIRSTAMOUNT) {
+                        mm.absorbUp()
+                    }
+                }
+            }
 
 
             currentPrice = OBrow.price;
