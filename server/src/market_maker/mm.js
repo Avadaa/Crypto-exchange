@@ -30,31 +30,6 @@ function pushTrade() {
             trade.push(mmQue.shift());
 }
 
-/*
-index = 9000;
-current1mOpen = 9010;
-fillBooks();
-
-
-if (index < current1mOpen)
-    currentHeavy = 'ask'
-
-else
-    currentHeavy = 'bid'
-
-weighBooks();
-
-setTimeout(() => {
-    index = 8995;
-    if (index > asks[0])
-        moveUp();
-    if (index < bids[0])
-        moveDown();
-}, 5000);
-*/
-
-
-
 setTimeout(() => {
     console.log('Streaming BTCUSDT from BINANCE')
     binance.websockets.trades(['BTCUSDT'], (trades) => {
@@ -107,7 +82,7 @@ function moveUp() {
         bidAbsorb = 0;
         askAbsorb = 0;
 
-        let askPrice = asks[4] + mmConf.SPREADBETWEEN;
+        let askPrice = asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN;
         let bidPrice = asks[0] - mmConf.SPREAD;
 
         asksUp(askPrice)
@@ -143,7 +118,7 @@ function moveDown() {
         bidAbsorb = 0;
         askAbsorb = 0;
 
-        let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
+        let bidPrice = bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN;
         let askPrice = bids[0] + mmConf.SPREAD;
 
         bidsDown(bidPrice)
@@ -157,40 +132,53 @@ function moveDown() {
 async function absorbUp() {
     askAbsorb = 0;
 
-    let askPrice = asks[4] + mmConf.SPREADBETWEEN;
-    asksUp(askPrice)
+    await sleep(500)
+    let askPrice = asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN;
+    if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
 
-    pushTrade()
-    weighBooks()
+        asksUp(askPrice)
 
+        pushTrade()
+        weighBooks()
+    }
 
     await sleep(mmConf.SLEEPAFTERABSORB)
 
 
     askPrice = asks[0] - mmConf.SPREADBETWEEN;
-    asksDown(askPrice)
+    if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
+        asksDown(askPrice)
 
-    pushTrade();
-    weighBooks()
+        pushTrade();
+        weighBooks()
+    }
+
 }
 
 async function absorbDown() {
     bidAbsorb = 0;
+    let bidPrice = bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN;
+    await sleep(500)
 
-    let bidPrice = bids[4] - mmConf.SPREADBETWEEN;
-    bidsDown(bidPrice)
+    if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
+        bidsDown(bidPrice)
 
-    pushTrade()
-    weighBooks()
+        pushTrade()
+        weighBooks()
+    }
 
 
     await sleep(mmConf.SLEEPAFTERABSORB)
 
-    bidPrice = bids[0] + mmConf.SPREADBETWEEN
-    bidsUp(bidPrice)
 
-    pushTrade()
-    weighBooks()
+    bidPrice = bids[0] + mmConf.SPREADBETWEEN
+    if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
+        bidsUp(bidPrice)
+
+        pushTrade()
+        weighBooks()
+    }
+
 }
 
 
@@ -272,18 +260,25 @@ function round(num) {
     return Math.round(num * 10000000) / 10000000;
 }
 
+function checkOrderAmounts() {
+    let a = trade.orderBook[1].filter((row) => {
+        asks.includes(row.price)
+    })
+    console.log(asks)
+}
+
 
 
 // Fetch the current 1min candle opening price every 2s after the last minute has closed
 // The delay to allows the ping to be 2000ms at max. Can be changed if needed.
 
 let minute = 60 * 1000;
+let fiveSeconds = 5 * 1000;
 const DELAY = 3000 // ms
 function get1mOpen() {
     setTimeout(() => {
         binance.candlesticks("BTCUSDT", "1m", (error, ticks, symbol) => {
             current1mOpen = Number(ticks[0][1]);
-            console.log(current1mOpen)
         }, { limit: 1, endTime: Date.time = function () { return new Date().toUnixTime(); } });
 
     }, DELAY);
@@ -301,7 +296,7 @@ function repeatEvery(func, interval) {
     setTimeout(start, delay);
 }
 repeatEvery(get1mOpen, minute)
-
+//repeatEvery(checkOrderAmounts, fiveSeconds)
 
 
 // Just linking the bidAbsorb and askAbsorb didn't work
@@ -368,14 +363,14 @@ function asksUp(price) {
     mmQue.push(obj);
 
     asks.shift();
-    asks[4] = price;
+    asks[mmConf.ORDERAMOUNT - 1] = price;
 
     obj = createOrderObj('addOrder', 0, price, 1);
     mmQue.push(obj)
 }
 
 function asksDown(price) {
-    obj = createOrderObj('removeOrder', 0, asks[4], 1);
+    obj = createOrderObj('removeOrder', 0, asks[mmConf.ORDERAMOUNT - 1], 1);
     mmQue.push(obj);
 
     asks.pop();
@@ -387,7 +382,7 @@ function asksDown(price) {
 }
 
 function bidsUp(price) {
-    obj = createOrderObj('removeOrder', 0, bids[4], 0);
+    obj = createOrderObj('removeOrder', 0, bids[mmConf.ORDERAMOUNT - 1], 0);
     mmQue.push(obj);
 
     bids.pop();
@@ -403,8 +398,28 @@ function bidsDown(price) {
     mmQue.push(obj);
 
     bids.shift();
-    bids[4] = price;
+    bids[mmConf.ORDERAMOUNT - 1] = price;
 
     obj = createOrderObj('addOrder', 0, price, 0);
     mmQue.push(obj)
+}
+
+function wallBelowBids() {
+    if (trade.orderBook[0][0].price < bids[mmConf.ORDERAMOUNT - 1]) {
+
+        let indexToOrderSpread = trade.orderBook[0][0].price - index;
+        if (indexToOrderSpread > mmConf.TAKERFEE * index) {
+
+            let amountToSell = Math.pow(indexToOrderSpread, mmConf.MARKETPOW) * mmConf.MARKETMULTIPLY - marketSold;
+
+            if (trade.orderBook[0][0].amount < amountToSell)
+                amountToSell = trade.orderBook[0][0].amount;
+
+            if (amountToSell > 0 && trade.orderBook[0][0].id != mmConf.ID) {
+                marketSold += amountToSell;
+                let obj = createOrderObj('marketOrder', amountToSell, trade.orderBook[0][0].price, 1);
+                mmQue.push(obj);
+            }
+        }
+    }
 }

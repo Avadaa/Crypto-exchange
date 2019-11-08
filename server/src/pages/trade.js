@@ -427,14 +427,14 @@ async function marketOrder(data) {
             if (OBrow.id == mmConf.ID) {
                 if (buySell == 'ask') {
                     mm.setBidAbsorb(change);
-                    if (mm.getBidAbsorb() >= mmConf.FIRSTAMOUNT) {
+                    if (mm.getBidAbsorb() >= mmConf.ABSORBAMOUNT) {
                         mm.absorbDown()
                     }
                 }
                 if (buySell == 'bid') {
                     mm.setAskAbsorb(change);
                     mm.askAbsorb += change;
-                    if (mm.getAskAbsorb() >= mmConf.FIRSTAMOUNT) {
+                    if (mm.getAskAbsorb() >= mmConf.ABSORBAMOUNT) {
                         mm.absorbUp()
                     }
                 }

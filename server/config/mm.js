@@ -1,6 +1,6 @@
 module.exports = {
     ID: 132, // Market maker's user id
-    SPREAD: 1, // (wanted spread - 2) USD
+    SPREAD: 1.3, // (wanted spread - 2) USD
     DEFAULTSPREAD: this.SPREAD,
     SPREADBETWEEN: 2.0, // spread between orders on one sides of the book
 
