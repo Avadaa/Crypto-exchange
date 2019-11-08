@@ -36,11 +36,6 @@ setTimeout(() => {
     binance.websockets.trades(['BTCUSDT'], (trades) => {
         index = Number(trades.p);
 
-        if (isNaN(asks[0]) || isNaN(asks[4]) || isNaN(bids[0]) || isNaN(bids[4])) {
-            console.log(asks)
-            console.log(bids)
-        }
-
         if (index > asks[0])
             moveUp();
         if (index < bids[0])
@@ -86,8 +81,8 @@ function moveUp() {
         bidAbsorb = 0;
         askAbsorb = 0;
 
-        let askPrice = round(asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN);
-        let bidPrice = round(asks[0] - mmConf.SPREAD);
+        let askPrice = round(asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN + random());
+        let bidPrice = round(asks[0] - mmConf.SPREAD - random());
 
         asksUp(askPrice)
         bidsUp(bidPrice)
@@ -122,8 +117,8 @@ function moveDown() {
         bidAbsorb = 0;
         askAbsorb = 0;
 
-        let bidPrice = round(bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN);
-        let askPrice = round(bids[0] + mmConf.SPREAD);
+        let bidPrice = round(bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN - random());
+        let askPrice = round(bids[0] + mmConf.SPREAD + random());
 
         bidsDown(bidPrice)
         asksDown(askPrice)
@@ -137,7 +132,7 @@ async function absorbUp() {
     askAbsorb = 0;
 
     await sleep(500)
-    let askPrice = round(asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN);
+    let askPrice = round(asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN + random());
     if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
 
         asksUp(askPrice)
@@ -149,7 +144,7 @@ async function absorbUp() {
     await sleep(mmConf.SLEEPAFTERABSORB)
 
 
-    askPrice = round(asks[0] - mmConf.SPREADBETWEEN);
+    askPrice = round(asks[0] - mmConf.SPREADBETWEEN + random());
     if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
         asksDown(askPrice)
 
@@ -161,7 +156,7 @@ async function absorbUp() {
 
 async function absorbDown() {
     bidAbsorb = 0;
-    let bidPrice = round(bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN);
+    let bidPrice = round(bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN - random());
     await sleep(500)
 
     if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
@@ -175,7 +170,7 @@ async function absorbDown() {
     await sleep(mmConf.SLEEPAFTERABSORB)
 
 
-    bidPrice = round(bids[0] + mmConf.SPREADBETWEEN);
+    bidPrice = round(bids[0] + mmConf.SPREADBETWEEN - random());
     if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
         bidsUp(bidPrice)
 
@@ -223,9 +218,9 @@ function fillSide(side) {
 
         let price;
         if (side == 'bids')
-            price = round(index - (mmConf.SPREAD) - i * mmConf.SPREADBETWEEN);
+            price = round(index - (mmConf.SPREAD) - i * mmConf.SPREADBETWEEN - random());
         if (side == 'asks')
-            price = round(index + (mmConf.SPREAD) + i * mmConf.SPREADBETWEEN);
+            price = round(index + (mmConf.SPREAD) + i * mmConf.SPREADBETWEEN + random());
 
         if (side == 'bids')
             bids[i] = price;
@@ -264,16 +259,41 @@ function round(num) {
     return Math.round(num * 10000000) / 10000000;
 }
 
-function checkOrderAmounts() {
-    /*for (row in trade.orderBook[1]){
-        if(row.amount == 0)
-    }
-    let a = trade.orderBook[1].filter((row) => {
-        asks.includes(row.price)
-        if()
-    }).filter()
-    console.log(asks)
-    */
+async function checkOrderAmounts() {
+    for (let i = 0; i < 2; i++)
+        for (let j = 0; j < trade.orderBook[i].length; j++) {
+            console.log(trade.orderBook[i][j])
+            if (trade.orderBook[i][j].amount == 0) {
+                mmQue.push(obj);
+            }
+        }
+    pushTrade();
+
+    await sleep(1000)
+    for (let i = 1; i < bids.length; i++)
+        if (bids[i] == bids[i - 1]) {
+            let obj = createOrderObj('removeOrder', 0, bids[i], 0);
+            mmQue.push(obj);
+
+            let price = bids[i] + mmConf.SPREADBETWEEN / 2;
+            obj = createOrderObj('addOrder', 0, price, 0);
+            mmQue.push(obj)
+
+            bids[i] = price;
+        }
+    for (let i = 1; i < asks.length; i++)
+        if (asks[i] == asks[i - 1]) {
+            let obj = createOrderObj('removeOrder', 0, asks[i], 0);
+            mmQue.push(obj);
+
+            let price = asks[i] - mmConf.SPREADBETWEEN / 2;
+            obj = createOrderObj('addOrder', 0, price, 0);
+            mmQue.push(obj)
+
+            asks[i] = price;
+        }
+    pushTrade();
+    weighBooks()
 }
 
 
@@ -305,7 +325,7 @@ function repeatEvery(func, interval) {
     setTimeout(start, delay);
 }
 repeatEvery(get1mOpen, minute)
-repeatEvery(checkOrderAmounts, fiveSeconds)
+//repeatEvery(checkOrderAmounts, fiveSeconds)
 
 
 // Just linking the bidAbsorb and askAbsorb didn't work
@@ -411,4 +431,8 @@ function bidsDown(price) {
 
     obj = createOrderObj('addOrder', 0, price, 0);
     mmQue.push(obj)
+}
+
+function random() {
+    return Number(Math.random().toFixed(2))
 }
