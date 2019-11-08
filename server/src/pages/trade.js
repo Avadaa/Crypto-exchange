@@ -636,6 +636,7 @@ module.exports = {
     changeOrder,
     processing,
     push,
-    orderBook
+    orderBook,
+    round
 
 }
