@@ -21,7 +21,8 @@ let marketSold = 0;
 
 let bidAbsorb = 0;
 let askAbsorb = 0;
-
+let absorbedUp = 0;
+let absorbedDown = 0;
 
 
 let mmQue = [];
@@ -141,7 +142,9 @@ async function absorbUp() {
         weighBooks()
     }
 
+    absorbedUp++;
     await sleep(mmConf.SLEEPAFTERABSORB)
+    absorbedUp--;
 
 
     askPrice = round(asks[0] - mmConf.SPREADBETWEEN + random());
@@ -166,9 +169,9 @@ async function absorbDown() {
         weighBooks()
     }
 
-
+    absorbedDown++;
     await sleep(mmConf.SLEEPAFTERABSORB)
-
+    absorbDown--;
 
     bidPrice = round(bids[0] + mmConf.SPREADBETWEEN - random());
     if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
@@ -296,6 +299,20 @@ async function checkOrderAmounts() {
     weighBooks()
 }
 
+function checkSpread() {
+    let spread = asks[0] - bids[0];
+    if (spread > mmConf.REALSPREAD) {
+        moveAsks = asks[0] - index > index - bids[0] ? true : false;
+        if (moveAsks)
+            asksDown(Number((asks[0] - mmConf.SPREAD / 2).toFixed(2)));
+        else
+            bidsUp(Number((bids[0] + mmConf.SPREAD / 2).toFixed(2)));
+
+        pushTrade();
+        weighBooks();
+    }
+}
+
 
 
 // Fetch the current 1min candle opening price every 2s after the last minute has closed
@@ -326,6 +343,7 @@ function repeatEvery(func, interval) {
 }
 repeatEvery(get1mOpen, minute)
 //repeatEvery(checkOrderAmounts, fiveSeconds)
+repeatEvery(checkSpread, fiveSeconds)
 
 
 // Just linking the bidAbsorb and askAbsorb didn't work
