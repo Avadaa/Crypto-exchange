@@ -324,7 +324,7 @@ async function marketOrder(data) {
             userinfo[0].balanceETH - userinfo[0].reservedETH >= change;
 
 
-        if (userHasBalance) {
+        if (userHasBalance && orderBook[OBside].length > 0) {
 
 
             let amountAvailable = OBrow.amount;

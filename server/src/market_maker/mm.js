@@ -132,55 +132,58 @@ function moveDown() {
 async function absorbUp() {
     askAbsorb = 0;
 
-    await sleep(500)
-    let askPrice = round(asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN + random());
-    if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
+    if (trade.orderBook[1].length > 0) {
+        await sleep(500)
+        let askPrice = round(asks[mmConf.ORDERAMOUNT - 1] + mmConf.SPREADBETWEEN + random());
+        if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
 
-        asksUp(askPrice)
+            asksUp(askPrice)
 
-        pushTrade()
-        weighBooks()
+            pushTrade()
+            weighBooks()
+        }
+
+        absorbedUp++;
+        await sleep(mmConf.SLEEPAFTERABSORB)
+        absorbedUp--;
+
+
+        askPrice = round(asks[0] - mmConf.SPREADBETWEEN + random());
+        if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
+            asksDown(askPrice)
+
+            pushTrade();
+            weighBooks()
+        }
     }
-
-    absorbedUp++;
-    await sleep(mmConf.SLEEPAFTERABSORB)
-    absorbedUp--;
-
-
-    askPrice = round(asks[0] - mmConf.SPREADBETWEEN + random());
-    if (askPrice > bids[0] + mmConf.SPREAD / 2 && askPrice > trade.orderBook[0][0].price) {
-        asksDown(askPrice)
-
-        pushTrade();
-        weighBooks()
-    }
-
 }
 
 async function absorbDown() {
     bidAbsorb = 0;
-    let bidPrice = round(bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN - random());
-    await sleep(500)
 
-    if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
-        bidsDown(bidPrice)
+    if (trade.orderBook[0].length > 0) {
+        let bidPrice = round(bids[mmConf.ORDERAMOUNT - 1] - mmConf.SPREADBETWEEN - random());
+        await sleep(500)
 
-        pushTrade()
-        weighBooks()
+        if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
+            bidsDown(bidPrice)
+
+            pushTrade()
+            weighBooks()
+        }
+
+        absorbedDown++;
+        await sleep(mmConf.SLEEPAFTERABSORB)
+        absorbDown--;
+
+        bidPrice = round(bids[0] + mmConf.SPREADBETWEEN - random());
+        if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
+            bidsUp(bidPrice)
+
+            pushTrade()
+            weighBooks()
+        }
     }
-
-    absorbedDown++;
-    await sleep(mmConf.SLEEPAFTERABSORB)
-    absorbDown--;
-
-    bidPrice = round(bids[0] + mmConf.SPREADBETWEEN - random());
-    if (bidPrice < asks[0] - mmConf.SPREAD / 2 && bidPrice < trade.orderBook[1][0].price) {
-        bidsUp(bidPrice)
-
-        pushTrade()
-        weighBooks()
-    }
-
 }
 
 
@@ -262,42 +265,6 @@ function round(num) {
     return Math.round(num * 10000000) / 10000000;
 }
 
-async function checkOrderAmounts() {
-    for (let i = 0; i < 2; i++)
-        for (let j = 0; j < trade.orderBook[i].length; j++) {
-            console.log(trade.orderBook[i][j])
-            if (trade.orderBook[i][j].amount == 0) {
-                mmQue.push(obj);
-            }
-        }
-    pushTrade();
-
-    await sleep(1000)
-    for (let i = 1; i < bids.length; i++)
-        if (bids[i] == bids[i - 1]) {
-            let obj = createOrderObj('removeOrder', 0, bids[i], 0);
-            mmQue.push(obj);
-
-            let price = bids[i] + mmConf.SPREADBETWEEN / 2;
-            obj = createOrderObj('addOrder', 0, price, 0);
-            mmQue.push(obj)
-
-            bids[i] = price;
-        }
-    for (let i = 1; i < asks.length; i++)
-        if (asks[i] == asks[i - 1]) {
-            let obj = createOrderObj('removeOrder', 0, asks[i], 0);
-            mmQue.push(obj);
-
-            let price = asks[i] - mmConf.SPREADBETWEEN / 2;
-            obj = createOrderObj('addOrder', 0, price, 0);
-            mmQue.push(obj)
-
-            asks[i] = price;
-        }
-    pushTrade();
-    weighBooks()
-}
 
 function checkSpread() {
     let spread = asks[0] - bids[0];
@@ -342,7 +309,6 @@ function repeatEvery(func, interval) {
     setTimeout(start, delay);
 }
 repeatEvery(get1mOpen, minute)
-//repeatEvery(checkOrderAmounts, fiveSeconds)
 repeatEvery(checkSpread, fiveSeconds)
 
 
