@@ -269,7 +269,7 @@ export default {
   }
 
   #localHistory {
-    height: calc(30vh + 30vh + 42px);
+    height: calc(31vh + 31vh + 55px);
     overflow: auto;
   }
 
