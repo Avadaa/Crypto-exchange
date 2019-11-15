@@ -210,5 +210,10 @@ module.exports = {
 
         }
 
+    },
+    async twoFaState(req, res) {
+        let twoFaQuery = `SELECT "twoFaEnabled" FROM users WHERE id = ${req.body.userId}`
+        let enabled = await db.query(twoFaQuery);
+        res.send(enabled[0].twoFaEnabled);
     }
 }

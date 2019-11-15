@@ -3,6 +3,9 @@
     <div id="container">
       <div id="tabs">
         <button id="tab" @click="toggleTabs()">Account settings</button>
+        <div class="tabSquare" id="tabSquare1"></div>
+        <div class="tabSquare" id="tabSquare2"></div>
+        <div class="tabSquare" id="tabSquare3"></div>
       </div>
       <div id="avatar">
         <img id="user-avatar-preview" src="../../assets/pics/logo.png" height="150" width="150" />
@@ -39,6 +42,7 @@
           <button v-on:click="changePw();">Change password</button>
           <p id="pwChangeErrors">Err</p>
         </div>
+        <div id="twoFaInfo"></div>
       </div>
     </div>
   </div>
@@ -102,17 +106,41 @@ export default {
         document.getElementById("avatar-img").src = file[0].dataURL;
       }
     },
-    toggleTabs() {
+    // Toggling between tabs on settings menu
+    async toggleTabs() {
       if ($("#avatar").css("display") == "block") {
         $("#avatar").css("display", "none");
         $("#accountInfo").css("display", "flex");
-        $("#tab").text("Avatar settings");
-      } else {
-        $("#avatar").css("display", "block");
+        $("#tab").text("Two-factor authentication");
+        $("#tabSquare1").css("display", "none");
+        $("#tabSquare2").css("display", "block");
+      } else if ($("#accountInfo").css("display") == "flex") {
+        let twoFaEnabled = await auth.getTwoFaState({
+          userId: this.$store.state.user.userId
+        });
+        console.log(twoFaEnabled);
+        $("#twoFaInfo").css("display", "flex");
+        if (twoFaEnabled.data == true) {
+          $("#twoFaInfoEnabled").css("display", "flex");
+          $("#twoFaInfoDisabled").css("display", "none");
+        } else {
+          $("#twoFaInfoEnabled").css("display", "none");
+          $("#twoFaInfoDisabled").css("display", "flex");
+        }
+
         $("#accountInfo").css("display", "none");
+        $("#tab").text("Avatar settings");
+        $("#tabSquare2").css("display", "none");
+        $("#tabSquare3").css("display", "block");
+      } else if ($("#twoFaInfo").css("display") == "flex") {
+        $("#avatar").css("display", "block");
+        $("#twoFaInfo").css("display", "none");
         $("#tab").text("Account settings");
+        $("#tabSquare3").css("display", "none");
+        $("#tabSquare1").css("display", "block");
       }
     },
+
     async changeName() {
       if (this.newUsername.length < 3) {
         $("#username-res-msg").text("Username too short");
@@ -197,13 +225,32 @@ export default {
   align-items: center;
 }
 
-#tab {
-  height: 50px;
-  width: 200px;
-
+#tabs {
   position: absolute;
-  left: 570px;
+  left: 525px;
   top: 30px;
+  #tab {
+    height: 60px;
+    width: 200px;
+  }
+
+  .tabSquare {
+    position: absolute;
+    top: 60px;
+
+    height: 3px;
+    width: 66.666px;
+    background: white;
+  }
+
+  #tabSquare2 {
+    left: 66.666px;
+    display: none;
+  }
+  #tabSquare3 {
+    left: 133.333px;
+    display: none;
+  }
 }
 
 #avatar {
@@ -290,6 +337,10 @@ export default {
         outline: 1px solid white;
       }
     }
+  }
+
+  #twoFaInfo {
+    display: none;
   }
 
   label {

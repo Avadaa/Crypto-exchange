@@ -32,6 +32,7 @@ function pushTrade() {
             trade.push(mmQue.shift());
 }
 
+/*
 setTimeout(() => {
     console.log('Streaming BTCUSDT from BINANCE')
     binance.websockets.trades(['BTCUSDT'], (trades) => {
@@ -51,7 +52,6 @@ setTimeout(() => {
 
     });
 }, 1000);
-
 
 function updateIndex() {
     trade.io.emit('updateIndex', ({ index }))
@@ -420,3 +420,4 @@ function bidsDown(price) {
 function random() {
     return Number(Math.random().toFixed(2))
 }
+*/

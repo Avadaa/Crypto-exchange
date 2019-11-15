@@ -9,7 +9,7 @@ export default new Vuex.Store({
         user: {
             username: null,
             userId: null,
-            address: null,
+            address: null
         },
         token: null,
         isUserLoggedIn: false
@@ -54,7 +54,7 @@ export default new Vuex.Store({
             let localStorageUser = {
                 username: localStorage.getItem('username'),
                 userId: localStorage.getItem('userId'),
-                address: localStorage.getItem('address')
+                address: localStorage.getItem('address'),
             }
             commit('setUser', localStorageUser);
         }

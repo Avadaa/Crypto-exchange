@@ -62,7 +62,7 @@ module.exports = {
                         res.send({
                             user,
                             token: jwtSignUser(user),
-                            errors: []
+                            errors: [],
                         })
                     }
 

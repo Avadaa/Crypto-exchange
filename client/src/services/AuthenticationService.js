@@ -43,6 +43,9 @@ export default {
     },
     checkToken(tokenInfo) {
         return Api().post('api/user/checktoken', tokenInfo);
+    },
+    getTwoFaState(userInfo) {
+        return Api().post('api/user/twofastate', userInfo);
     }
 
 }
