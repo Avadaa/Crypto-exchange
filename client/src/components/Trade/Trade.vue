@@ -269,12 +269,12 @@ export default {
   }
 
   #localHistory {
-    height: calc(31vh + 31vh + 55px);
+    height: calc(26vh + 26vh +55px);
     overflow: auto;
   }
 
   .sides {
-    height: 30vh;
+    height: 25vh;
   }
 
   .disabled {
