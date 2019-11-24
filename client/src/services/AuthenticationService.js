@@ -46,6 +46,9 @@ export default {
     },
     getTwoFaState(userInfo) {
         return Api().post('api/user/twofastate', userInfo);
+    },
+    getTwoFaQR(userInfo) {
+        return Api().post('api/user/twofaqr', userInfo);
     }
 
 }

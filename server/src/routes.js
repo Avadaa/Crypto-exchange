@@ -31,5 +31,6 @@ module.exports = (app) => {
         AuthenticationController.changePw);
     app.post('/api/user/checktoken', AuthenticationController.checkToken);
     app.post('/api/user/twofastate', AuthenticationController.twoFaState);
+    app.post('/api/user/twofaqr', AuthenticationController.twoFaQR);
 
 }

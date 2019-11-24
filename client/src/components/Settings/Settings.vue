@@ -2,7 +2,7 @@
   <div id="settings" class="hidden">
     <div id="container">
       <div id="tabs">
-        <button id="tab" @click="toggleTabs()">Account settings</button>
+        <button id="tab" @click="toggleTabs()">To account settings</button>
         <div class="tabSquare" id="tabSquare1"></div>
         <div class="tabSquare" id="tabSquare2"></div>
         <div class="tabSquare" id="tabSquare3"></div>
@@ -42,7 +42,32 @@
           <button v-on:click="changePw();">Change password</button>
           <p id="pwChangeErrors">Err</p>
         </div>
-        <div id="twoFaInfo"></div>
+      </div>
+      <div id="twoFaDiv">
+        <p id="twoFaText">Your two factor authentication is currently</p>
+
+        <div id="twoFaInfoEnabled">enabled</div>
+        <div id="twoFaInfoDisabled">
+          <p id="twoFaStateDisabled">Disabled</p>
+          <div>
+            <img id="twoFaScanQR" width="180" height="180" />
+            <div>
+              <label for="twoFaScanCode">Scan the QR and input a code from your device</label>
+              <br />
+              <input
+                type="text"
+                name="twoFaScanCode"
+                v-model="twoFaCode"
+                autocomplete="off"
+                maxlength="6"
+              />
+              <br />
+              <div id="twoFaButtonDiv">
+                <button v-on:click="twoFaConfirm();">Confirm</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -86,7 +111,10 @@ export default {
       newUsername: "",
       pwCurr: "",
       pwNew: "",
-      pwNewConfirm: ""
+      pwNewConfirm: "",
+
+      twoFaEnabled: false,
+      twoFaCode: ""
     };
   },
 
@@ -111,31 +139,38 @@ export default {
       if ($("#avatar").css("display") == "block") {
         $("#avatar").css("display", "none");
         $("#accountInfo").css("display", "flex");
-        $("#tab").text("Two-factor authentication");
+        $("#tab").text("To two-factor authentication");
         $("#tabSquare1").css("display", "none");
         $("#tabSquare2").css("display", "block");
       } else if ($("#accountInfo").css("display") == "flex") {
         let twoFaEnabled = await auth.getTwoFaState({
           userId: this.$store.state.user.userId
         });
-        console.log(twoFaEnabled);
-        $("#twoFaInfo").css("display", "flex");
-        if (twoFaEnabled.data == true) {
+        this.twoFaEnabled = twoFaEnabled.data;
+
+        $("#accountInfo").css("display", "none");
+        $("#tab").text("To avatar settings");
+        $("#tabSquare2").css("display", "none");
+        $("#tabSquare3").css("display", "block");
+        $("#twoFaDiv").css("display", "flex");
+
+        if (this.twoFaEnabled == true) {
           $("#twoFaInfoEnabled").css("display", "flex");
           $("#twoFaInfoDisabled").css("display", "none");
         } else {
+          let qrData = await auth.getTwoFaQR({
+            userId: this.$store.state.user.userId,
+            username: this.$store.state.user.username
+          });
+          $("#twoFaScanQR").attr("src", qrData.data);
+
           $("#twoFaInfoEnabled").css("display", "none");
           $("#twoFaInfoDisabled").css("display", "flex");
         }
-
-        $("#accountInfo").css("display", "none");
-        $("#tab").text("Avatar settings");
-        $("#tabSquare2").css("display", "none");
-        $("#tabSquare3").css("display", "block");
-      } else if ($("#twoFaInfo").css("display") == "flex") {
+      } else if ($("#twoFaDiv").css("display") == "flex") {
         $("#avatar").css("display", "block");
-        $("#twoFaInfo").css("display", "none");
-        $("#tab").text("Account settings");
+        $("#twoFaDiv").css("display", "none");
+        $("#tab").text("To account settings");
         $("#tabSquare3").css("display", "none");
         $("#tabSquare1").css("display", "block");
       }
@@ -230,13 +265,13 @@ export default {
   left: 525px;
   top: 30px;
   #tab {
-    height: 60px;
+    height: 65px;
     width: 200px;
   }
 
   .tabSquare {
     position: absolute;
-    top: 60px;
+    top: 65px;
 
     height: 3px;
     width: 66.666px;
@@ -339,10 +374,6 @@ export default {
     }
   }
 
-  #twoFaInfo {
-    display: none;
-  }
-
   label {
     width: 270px;
 
@@ -363,6 +394,79 @@ export default {
 
     padding: 5px;
   }
+}
+
+#twoFaDiv {
+  display: none;
+  flex-direction: column;
+
+  font-size: 2em;
+
+  #twoFaText,
+  #twoFaStateDisabled,
+  #twoFaStateEndabled,
+  img,
+  label,
+  input,
+  button {
+    position: relative;
+  }
+
+  #twoFaText {
+    top: -80px;
+  }
+
+  #twoFaStateDisabled,
+  #twoFaStateEndabled {
+    top: -145px;
+    left: 340px;
+  }
+
+  #twoFaStateDisabled {
+    color: rgb(255, 100, 100);
+  }
+  #twoFaStateEndabled {
+    color: rgb(78, 196, 78);
+  }
+
+  #twoFaInfoDisabled {
+    display: none;
+  }
+  #twoFaInfoEnabled {
+    display: none;
+  }
+
+  img {
+    left: -65px;
+    top: -40px;
+  }
+
+  label {
+    left: -65px;
+  }
+
+  input {
+    width: 95px !important;
+    border-radius: 5px;
+    border: 0;
+    font-size: 0.8em;
+    float: left;
+    width: 330px;
+
+    padding: 5px;
+    padding-left: 12px;
+    left: 216px;
+    top: 10px;
+  }
+
+  button {
+    font-size: 1em !important;
+    left: -121px;
+    top: 20px;
+  }
+}
+#twoFaButtonDiv {
+  height: 0px;
 }
 
 button {

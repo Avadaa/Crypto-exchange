@@ -6,6 +6,8 @@ const ethereum = require('../Ethereum/ethereum')
 const ethereumConfig = require('../../config/ethereum')
 const jwt = require('jsonwebtoken')
 const cookiesConf = require('../../config/cookies')
+const speakeasy = require('speakeasy')
+const qr = require('qrcode')
 
 
 module.exports = {
@@ -215,5 +217,16 @@ module.exports = {
         let twoFaQuery = `SELECT "twoFaEnabled" FROM users WHERE id = ${req.body.userId}`
         let enabled = await db.query(twoFaQuery);
         res.send(enabled[0].twoFaEnabled);
+    },
+    async twoFaQR(req, res) {
+        let secret = speakeasy.generateSecret();
+
+        let secretQuery = `UPDATE users SET twofasecret = '${secret.base32}' WHERE id = ${req.body.userId}`
+        await db.query(secretQuery)
+
+        let url = speakeasy.otpauthURL({ secret: secret.ascii, label: `Ezgains Exchange ${req.body.username}` })
+        qr.toDataURL(url, (err, img) => {
+            res.send(img)
+        })
     }
 }
