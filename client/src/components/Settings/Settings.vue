@@ -173,11 +173,7 @@ export default {
           $("#twoFaInfoEnabled").css("display", "flex");
           $("#twoFaInfoDisabled").css("display", "none");
         } else {
-          let qrData = await auth.getTwoFaQR({
-            userId: this.$store.state.user.userId,
-            username: this.$store.state.user.username
-          });
-          $("#twoFaScanQR").attr("src", qrData.data);
+          this.getTwoFaQR();
 
           $("#twoFaInfoEnabled").css("display", "none");
           $("#twoFaInfoDisabled").css("display", "flex");
@@ -240,8 +236,36 @@ export default {
       if (!result.data) $("#twoFaError").css("display", "block");
       else {
         $("#twoFaInfoDisabled").css("display", "none");
+        $("#twoFaError").css("display", "none");
         $("#twoFaInfoEnabled").css("display", "flex");
+        $("#twoFaDiv input").val("");
+        this.twoFaCode = "";
       }
+    },
+    async twoFaDisable() {
+      let result = await auth.checkTwoFa({
+        userId: this.$store.state.user.userId,
+        input: this.twoFaCode
+      });
+      if (!result.data) $("#twoFaError").css("display", "block");
+      else {
+        await auth.disableTwoFa({
+          userId: this.$store.state.user.userId
+        });
+        this.getTwoFaQR();
+        $("#twoFaInfoEnabled").css("display", "none");
+        $("#twoFaError").css("display", "none");
+        $("#twoFaInfoDisabled").css("display", "flex");
+        $("#twoFaDiv input").val("");
+        this.twoFaCode = "";
+      }
+    },
+    async getTwoFaQR() {
+      let qrData = await auth.getTwoFaQR({
+        userId: this.$store.state.user.userId,
+        username: this.$store.state.user.username
+      });
+      $("#twoFaScanQR").attr("src", qrData.data);
     }
   },
   mounted() {

@@ -52,6 +52,10 @@ export default {
     },
     checkTwoFa(twoFaInfo) {
         return Api().post('api/user/checktwofa', twoFaInfo);
+    },
+    disableTwoFa(userInfo) {
+        return Api().post('api/user/disabletwofa', userInfo);
     }
+
 
 }

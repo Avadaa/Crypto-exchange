@@ -33,5 +33,6 @@ module.exports = (app) => {
     app.post('/api/user/twofastate', AuthenticationController.twoFaState);
     app.post('/api/user/twofaqr', AuthenticationController.twoFaQR);
     app.post('/api/user/checktwofa', AuthenticationController.checkTwoFa);
+    app.post('/api/user/disabletwofa', AuthenticationController.disableTwoFa);
 
 }

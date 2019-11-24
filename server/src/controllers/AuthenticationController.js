@@ -253,5 +253,10 @@ module.exports = {
         }
         console.log(verify)
         res.send(verify)
+    },
+    async disableTwoFa(req, res) {
+        let twoFaQuery = `UPDATE users SET "twofaenabled" = false WHERE id = ${req.body.userId}`
+        await db.query(twoFaQuery);
+        res.send()
     }
 }
