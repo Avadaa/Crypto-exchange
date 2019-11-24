@@ -13,7 +13,7 @@
           <p>Upload your new avatar</p>
           <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions"></vue-dropzone>
           <br />
-          <button id="upload-btn" v-on:click="send();">Upload</button>
+          <button id="upload-btn" v-on:click="sendAvatar();">Upload</button>
           <p>Maximum file size 2MB</p>
         </div>
         <div></div>
@@ -46,27 +46,39 @@
       <div id="twoFaDiv">
         <p id="twoFaText">Your two factor authentication is currently</p>
 
-        <div id="twoFaInfoEnabled">enabled</div>
+        <div id="twoFaInfoEnabled">
+          <p id="twoFaStateEnabled">Enabled</p>
+          <p
+            id="twoFaWarning"
+          >Warning: By disabling 2fa your account will be more prone to malicious attacks</p>
+          <div class="twoFaButtonDiv">
+            <button v-on:click="twoFaDisable();">Confirm</button>
+          </div>
+          <label
+            for="twoFaInput"
+            class="twoFaInputLabel"
+          >Input a code from your device to disable 2fa</label>
+        </div>
         <div id="twoFaInfoDisabled">
           <p id="twoFaStateDisabled">Disabled</p>
           <div>
             <img id="twoFaScanQR" width="180" height="180" />
-            <div>
-              <label for="twoFaScanCode">Scan the QR and input a code from your device</label>
-              <br />
-              <input
-                type="text"
-                name="twoFaScanCode"
-                v-model="twoFaCode"
-                autocomplete="off"
-                maxlength="6"
-              />
-              <br />
-              <div id="twoFaButtonDiv">
-                <button v-on:click="twoFaConfirm();">Confirm</button>
-              </div>
+            <div class="twoFaButtonDiv">
+              <button v-on:click="twoFaConfirm();">Confirm</button>
             </div>
           </div>
+          <label
+            for="twoFaInput"
+            class="twoFaInputLabel"
+          >Scan the QR and input a code from your device</label>
+        </div>
+        <div id="twoFaErrorDiv">
+          <p id="twoFaError">Verification failed</p>
+        </div>
+        <div>
+          <br />
+          <input type="text" name="twoFaInput" v-model="twoFaCode" autocomplete="off" maxlength="6" />
+          <br />
         </div>
       </div>
     </div>
@@ -119,7 +131,7 @@ export default {
   },
 
   methods: {
-    async send() {
+    async sendAvatar() {
       let file = $("#dropzone")
         .get(0)
         .dropzone.getAcceptedFiles();
@@ -155,6 +167,9 @@ export default {
         $("#twoFaDiv").css("display", "flex");
 
         if (this.twoFaEnabled == true) {
+          $("#twoFaInputLabel").text(
+            "Input a code from your device to disable 2fa"
+          );
           $("#twoFaInfoEnabled").css("display", "flex");
           $("#twoFaInfoDisabled").css("display", "none");
         } else {
@@ -170,6 +185,7 @@ export default {
       } else if ($("#twoFaDiv").css("display") == "flex") {
         $("#avatar").css("display", "block");
         $("#twoFaDiv").css("display", "none");
+        $("#twoFaError").css("display", "none");
         $("#tab").text("To account settings");
         $("#tabSquare3").css("display", "none");
         $("#tabSquare1").css("display", "block");
@@ -212,6 +228,19 @@ export default {
       } else {
         $("#pwChangeErrors").css("color", "rgb(255, 163, 163)");
         $("#pwChangeErrors").css("font-size", "0.5em");
+      }
+    },
+
+    async twoFaConfirm() {
+      let result = await auth.checkTwoFa({
+        userId: this.$store.state.user.userId,
+        input: this.twoFaCode
+      });
+
+      if (!result.data) $("#twoFaError").css("display", "block");
+      else {
+        $("#twoFaInfoDisabled").css("display", "none");
+        $("#twoFaInfoEnabled").css("display", "flex");
       }
     }
   },
@@ -404,45 +433,75 @@ export default {
 
   #twoFaText,
   #twoFaStateDisabled,
-  #twoFaStateEndabled,
+  #twoFaStateEnabled,
+  #twoFaErrorDiv,
   img,
   label,
   input,
   button {
-    position: relative;
+    position: absolute;
   }
 
   #twoFaText {
-    top: -80px;
+    top: 70px;
+    left: 100px;
   }
 
   #twoFaStateDisabled,
-  #twoFaStateEndabled {
-    top: -145px;
-    left: 340px;
+  #twoFaStateEnabled {
+    top: 115px;
+    left: 350px;
   }
 
-  #twoFaStateDisabled {
+  #twoFaStateDisabled,
+  #twoFaError,
+  #twoFaWarning {
     color: rgb(255, 100, 100);
   }
-  #twoFaStateEndabled {
+
+  #twoFaStateEnabled {
     color: rgb(78, 196, 78);
   }
 
-  #twoFaInfoDisabled {
-    display: none;
+  #twoFaInfoEnabled {
+    label {
+      left: 86px;
+      top: 460px;
+    }
   }
+
+  #twoFaInfoDisabled {
+    label {
+      left: 60px;
+      top: 460px;
+    }
+  }
+
+  #twoFaInfoDisabled,
   #twoFaInfoEnabled {
     display: none;
   }
 
-  img {
-    left: -65px;
-    top: -40px;
+  #twoFaWarning {
+    font-size: 1em;
+    padding-left: 40px;
+    padding-right: 40px;
   }
 
-  label {
-    left: -65px;
+  #twoFaErrorDiv {
+    height: 50px;
+    top: 630px;
+    left: 285px;
+
+    p {
+      display: none;
+      margin: 0;
+    }
+  }
+
+  img {
+    left: 320px;
+    top: 220px;
   }
 
   input {
@@ -455,18 +514,19 @@ export default {
 
     padding: 5px;
     padding-left: 12px;
-    left: 216px;
-    top: 10px;
+    left: 350px;
+    top: 520px;
   }
 
-  button {
-    font-size: 1em !important;
-    left: -121px;
-    top: 20px;
+  .twoFaButtonDiv {
+    height: 0px;
+
+    button {
+      font-size: 1em !important;
+      left: 343px;
+      top: 575px;
+    }
   }
-}
-#twoFaButtonDiv {
-  height: 0px;
 }
 
 button {

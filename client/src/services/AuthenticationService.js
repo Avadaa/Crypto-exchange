@@ -49,6 +49,9 @@ export default {
     },
     getTwoFaQR(userInfo) {
         return Api().post('api/user/twofaqr', userInfo);
+    },
+    checkTwoFa(twoFaInfo) {
+        return Api().post('api/user/checktwofa', twoFaInfo);
     }
 
 }

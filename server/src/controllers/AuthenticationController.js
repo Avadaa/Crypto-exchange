@@ -214,9 +214,9 @@ module.exports = {
 
     },
     async twoFaState(req, res) {
-        let twoFaQuery = `SELECT "twoFaEnabled" FROM users WHERE id = ${req.body.userId}`
+        let twoFaQuery = `SELECT "twofaenabled" FROM users WHERE id = ${req.body.userId}`
         let enabled = await db.query(twoFaQuery);
-        res.send(enabled[0].twoFaEnabled);
+        res.send(enabled[0].twofaenabled);
     },
     async twoFaQR(req, res) {
         let secret = speakeasy.generateSecret();
@@ -228,5 +228,30 @@ module.exports = {
         qr.toDataURL(url, (err, img) => {
             res.send(img)
         })
+    },
+    async checkTwoFa(req, res) {
+        let secretQuery = `SELECT "twofasecret" FROM users WHERE id = ${req.body.userId}`
+        let secret = await db.query(secretQuery);
+        let verify = false;
+
+        try {
+            verify = speakeasy.totp.verify({
+                secret: secret[0].twofasecret,
+                encoding: 'base32',
+                token: req.body.input,
+                window: 2
+            });
+
+
+        }
+        catch (e) {
+        }
+
+        if (verify) {
+            let twoFaQuery = `UPDATE users SET "twofaenabled" = true WHERE id = ${req.body.userId}`
+            await db.query(twoFaQuery);
+        }
+        console.log(verify)
+        res.send(verify)
     }
 }
