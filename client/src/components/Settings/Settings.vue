@@ -235,11 +235,9 @@ export default {
 
       if (!result.data) $("#twoFaError").css("display", "block");
       else {
+        this.clearFa();
         $("#twoFaInfoDisabled").css("display", "none");
-        $("#twoFaError").css("display", "none");
         $("#twoFaInfoEnabled").css("display", "flex");
-        $("#twoFaDiv input").val("");
-        this.twoFaCode = "";
       }
     },
     async twoFaDisable() {
@@ -253,11 +251,9 @@ export default {
           userId: this.$store.state.user.userId
         });
         this.getTwoFaQR();
+        this.clearFa();
         $("#twoFaInfoEnabled").css("display", "none");
-        $("#twoFaError").css("display", "none");
         $("#twoFaInfoDisabled").css("display", "flex");
-        $("#twoFaDiv input").val("");
-        this.twoFaCode = "";
       }
     },
     async getTwoFaQR() {
@@ -266,6 +262,11 @@ export default {
         username: this.$store.state.user.username
       });
       $("#twoFaScanQR").attr("src", qrData.data);
+    },
+    clearFa() {
+      $("#twoFaError").css("display", "none");
+      $("#twoFaDiv input").val("");
+      this.twoFaCode = "";
     }
   },
   mounted() {
