@@ -232,20 +232,7 @@ module.exports = {
     async checkTwoFa(req, res) {
         let secretQuery = `SELECT "twofasecret" FROM users WHERE id = ${req.body.userId}`
         let secret = await db.query(secretQuery);
-        let verify = false;
-
-        try {
-            verify = speakeasy.totp.verify({
-                secret: secret[0].twofasecret,
-                encoding: 'base32',
-                token: req.body.input,
-                window: 2
-            });
-
-
-        }
-        catch (e) {
-        }
+        let verify = await Login.checkTwoFa(req.body.input, secret[0].twofasecret);
 
         if (verify) {
             let twoFaQuery = `UPDATE users SET "twofaenabled" = true WHERE id = ${req.body.userId}`

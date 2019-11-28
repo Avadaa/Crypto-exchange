@@ -1,8 +1,7 @@
 const db = require('../dbQueries');
-
-
-
+const auth = require('../controllers/AuthenticationController');
 const bcrypt = require('bcryptjs');
+const speakeasy = require('speakeasy');
 
 const jwt = require('jsonwebtoken');
 const cookiesConfig = require('../../config/cookies');
@@ -16,6 +15,22 @@ function jwtSignUser(user) {
 }
 
 module.exports = {
+    async checkTwoFa(code, secret) {
+        let verify = false;
+
+        try {
+            verify = speakeasy.totp.verify({
+                secret: secret,
+                encoding: 'base32',
+                token: code,
+                window: 2
+            });
+
+        }
+        catch (e) {
+        }
+        return verify;
+    },
     async login(req, res) {
         let loginQuery = `SELECT * FROM users WHERE username = '${req.body.username}'`;
         let errorMsg = [];
@@ -23,8 +38,13 @@ module.exports = {
 
         let dbRes = await db.query(loginQuery);
 
+
         // No matching users in the database
         if (dbRes.length == 0 || req.body.password.length == 0)
+            errorMsg.push('Incorrect credentials');
+
+
+        else if (dbRes[0].twofaenabled == true && await this.checkTwoFa(req.body.twoFaCode, dbRes[0].twofasecret) == false)
             errorMsg.push('Incorrect credentials');
 
         else {

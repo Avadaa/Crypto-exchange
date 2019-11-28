@@ -9,6 +9,13 @@
       <input type="password" name="password" v-model="password" />
       <br />
       <br />
+      <label for="twoFaCode">
+        Authentication
+        <br />(if enabled)
+      </label>
+      <input type="text" name="twoFaCode" v-model="twoFaCode" />
+      <br />
+      <br />
       <ul id="error-ul">
         <li v-if="error.length > 0">{{error}}</li>
       </ul>
@@ -28,6 +35,7 @@ export default {
     return {
       username: "",
       password: "",
+      twoFaCode: "",
       error: []
     };
   },
@@ -36,7 +44,8 @@ export default {
     async login() {
       const res = await auth.login({
         username: this.username,
-        password: this.password
+        password: this.password,
+        twoFaCode: this.twoFaCode
       });
 
       if (res.data.errors.length > 0) this.error = res.data.errors[0];
