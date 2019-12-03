@@ -1,25 +1,31 @@
 <template>
   <div id="login" @keyup.enter="login">
-    <div id="form">
-      <label for="username">Username</label>
-      <input type="text" name="username" v-model="username" autocomplete="off" />
-      <br />
-      <br />
-      <label for="password">Password</label>
-      <input type="password" name="password" v-model="password" />
-      <br />
-      <br />
-      <label for="twoFaCode">
-        Authentication
-        <br />(if enabled)
-      </label>
-      <input type="text" name="twoFaCode" v-model="twoFaCode" />
-      <br />
-      <br />
-      <ul id="error-ul">
-        <li v-if="error.length > 0">{{error}}</li>
-      </ul>
-      <button v-on:click="login();" id="login-button">Log in</button>
+    <div id="login-area">
+      <div id="form">
+        <label for="username">Username</label>
+        <input type="text" name="username" v-model="username" autocomplete="off" />
+        <br />
+        <br />
+        <label for="password">Password</label>
+        <input type="password" name="password" v-model="password" />
+        <br />
+        <br />
+        <label for="twoFaCode">
+          Authentication
+          <br />(if enabled)
+        </label>
+        <input type="text" name="twoFaCode" v-model="twoFaCode" />
+        <br />
+        <br />
+        <ul id="error-ul">
+          <li v-if="error.length > 0">{{error}}</li>
+        </ul>
+        <button v-on:click="login();" id="login-button">Log in</button>
+      </div>
+    </div>
+    <div id="legal-info">
+      EVEN THOUGH THE SITE CAN HANDLE REAL WORLD MONEY, IT IS NOT MEANT FOR REAL CUSTOMERS. THE PROJECT IS MAINLY FOR CV-PURPOSES, AND SHOULD
+      <u>NEVER</u> BE USED FOR ACTUAL TRADING
     </div>
   </div>
 </template>
@@ -78,9 +84,17 @@ export default {
 </script>
 
 <style scoped lang="scss">
-#login {
+#login-area {
   display: flex;
   justify-content: space-around;
+}
+
+#legal-info {
+  margin-top: 100px;
+  color: rgb(255, 196, 196);
+  width: 400px;
+  position: relative;
+  left: calc(50vw - 200px);
 }
 
 #form {
