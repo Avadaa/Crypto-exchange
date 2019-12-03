@@ -32,10 +32,10 @@ function pushTrade() {
             trade.push(mmQue.shift());
 }
 
-/*
+
 setTimeout(() => {
-    console.log('Streaming BTCUSDT from BINANCE')
-    binance.websockets.trades(['BTCUSDT'], (trades) => {
+    console.log('Streaming ETHUSDT from BINANCE')
+    binance.websockets.trades(['ETHUSDT'], (trades) => {
         index = Number(trades.p);
 
         if (index > asks[0])
@@ -271,9 +271,9 @@ function checkSpread() {
     if (spread > mmConf.REALSPREAD) {
         moveAsks = asks[0] - index > index - bids[0] ? true : false;
         if (moveAsks)
-            asksDown(Number((asks[0] - mmConf.SPREAD / 2).toFixed(2)));
+            asksDown(Number((asks[0] - mmConf.SPREAD).toFixed(2)));
         else
-            bidsUp(Number((bids[0] + mmConf.SPREAD / 2).toFixed(2)));
+            bidsUp(Number((bids[0] + mmConf.SPREAD).toFixed(2)));
 
         pushTrade();
         weighBooks();
@@ -343,9 +343,9 @@ module.exports = {
         });
 
 
-        binance.prices('BTCUSDT', async (err, ticker) => {
+        binance.prices('ETHUSDT', async (err, ticker) => {
             if (err) console.log('ERROR geting Binance price')
-            index = Number(ticker.BTCUSDT)
+            index = Number(ticker.ETHUSDT)
             fillBooks();
 
             get1mOpen()
@@ -420,4 +420,4 @@ function bidsDown(price) {
 function random() {
     return Number(Math.random().toFixed(2))
 }
-*/
+

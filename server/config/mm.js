@@ -1,9 +1,9 @@
 module.exports = {
-    ID: 132, // Market maker's user id
-    SPREAD: 1.3, // (wanted spread - 2) USD
-    REALSPREAD: 1.3 * 2.5,
+    ID: 1, // Market maker's user id
+    SPREAD: 0.05, // USD
+    REALSPREAD: 0.05,
 
-    SPREADBETWEEN: 2.0, // spread between orders on one sides of the book
+    SPREADBETWEEN: 0.05, // spread between orders on one sides of the book
 
     FIRSTAMOUNT: 10.0, // Amount in BTC how big the best order per side is
     ABSORBAMOUNT: 10.0, // How many coins can a side take before the orders are moved further away

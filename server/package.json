@@ -4,7 +4,7 @@
   "description": "An exchange where users can trade cryptocurrencies with each others. Capable of working with real money.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node src/server.js",
     "dev": "nodemon server.js"
   },
   "repository": {
@@ -28,7 +28,6 @@
     "node-binance-api": "^0.9.8",
     "node-eth-address": "^0.1.3",
     "pg": "^7.12.0",
-    "pug": "^2.0.4",
     "qrcode": "^1.4.4",
     "socket.io": "^2.2.0",
     "speakeasy": "^2.0.0",

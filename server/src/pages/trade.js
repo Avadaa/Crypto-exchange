@@ -9,14 +9,24 @@ let mmConf = require('../../config/mm')
 
 // Didn't get socket IO to work on client side without an 
 // additional http connection on a different port
-const http = require('http').Server(server.express)
+
+
+const http = require('http').createServer(server.app)
+
 http.listen(3001, () => {
     console.log('IO server runningg')
 })
 
-const socketIo = require('socket.io');
 
-const io = socketIo(http);
+
+
+
+
+//const io = require('socket.io')(3001);
+const io = require('socket.io')(http);
+
+
+
 
 // [[Bids],                [Asks]]
 // [[{price, amount, id, orderId, originalAmount}], [{price, amount, id, orderId, originalAmount}]]

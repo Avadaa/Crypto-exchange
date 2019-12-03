@@ -5,7 +5,11 @@ script.src = 'http://code.jquery.com/jquery-1.11.0.min.js';
 script.type = 'text/javascript';
 document.getElementsByTagName('head')[0].appendChild(script);
 
-let socket = io("http://localhost:3001");
+//let socket = io("http://localhost:3001");
+
+//let socket = io("http://ezgains-backend.eu-west-1.elasticbeanstalk.com:3001");
+let socket = io("http://ezgains-backend.eu-west-1.elasticbeanstalk.com:3001/", { transports: ['websocket', 'polling', 'flashsocket'] });
+
 
 
 let OB;
@@ -55,16 +59,19 @@ socket.on('updateIndex', async (data) => {
 socket.on('addOrder', async (data) => {
     let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
-    if (data.userID == user.id && data.type == 'bid') {
-        user.availableUSD -= data.order.price * data.order.amount;
-        document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
+    if (data.userId && user.id && data.type) {
+        if (data.userID == user.id && data.type == 'bid') {
+            user.availableUSD -= data.order.price * data.order.amount;
+            document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
+        }
+
+        if (data.userID == user.id && data.type == 'ask') {
+
+            user.availableETH -= data.order.amount;
+            document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
+        }
     }
 
-    if (data.userID == user.id && data.type == 'ask') {
-
-        user.availableETH -= data.order.amount;
-        document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
-    }
 
     if (matchingPriceAmount == false) {
         let html = `<tr><td class="order-price">${data.order.price}</td><td class="order-amount">${data.order.amount}</td><td class="order-remove-invisible">X</td></tr>`
@@ -92,7 +99,7 @@ socket.on('removeOrder', async (data) => {
         if (rowPrice == data.price) {
 
             // Hide 'removal' -button from client side, if needed
-            if (user.id == data.id && data.removeFully) {
+            if (user && data && user.id == data.id && data.removeFully) {
                 $($(rows[i]).children()[2]).removeClass('order-remove-visible').addClass('order-remove-invisible');
                 findOwnOrders();
             }
@@ -112,7 +119,7 @@ socket.on('removeOrder', async (data) => {
         }
     }
 
-    if (data.id == user.id) {
+    if (data && user && data.id == user.id) {
         if (!data.isMM && data.userClicked)
             cancelInHistory({ orderIds: data.orderIds });
 
@@ -286,7 +293,7 @@ export function findOwnOrders() {
     let prices = [[], []];
     for (let i = 0; i < 2; i++)
         for (let j = 0; j < OB[i].length; j++)
-            if (OB[i][j].id == user.id && !prices[i].includes(OB[i][j].price))
+            if (OB && user && OB[i][j].id == user.id && !prices[i].includes(OB[i][j].price))
                 prices[i].push(OB[i][j].price);
 
     let bookEles = [$($('#bid').children()[0]).children(), $($('#ask').children()[0]).children()]
