@@ -57,14 +57,13 @@ socket.on('updateIndex', async (data) => {
 socket.on('addOrder', async (data) => {
     let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
-    if (data.userId && user.id && data.type) {
+    if (data.userID && user.id && data.type) {
         if (data.userID == user.id && data.type == 'bid') {
             user.availableUSD -= data.order.price * data.order.amount;
             document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
         }
 
         if (data.userID == user.id && data.type == 'ask') {
-
             user.availableETH -= data.order.amount;
             document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
         }
@@ -185,10 +184,61 @@ socket.on('changeOrder', (data) => {
 
             current = round(round(current) + round(data.change));
             $(rows[i]).children()[1].innerText = round(current);
-
+            validateBooks()
         }
     }
 })
+
+/*
+function validateBooks() {
+    let rows = $($(`#ask`).children()[0]).children()
+    let row;
+    for (let i = 1; i < rows.length; i++)
+        if ($(rows[i]).children()[0].innerText != '0') {
+            row = $(rows[i])
+            break;
+        }
+
+    for (let i = 0; i < OB[1].length; i++)
+        if (OB[1][i].price == row.children()[0].innerText) {
+            if (OB[1][i].amount != row.children()[1].innerText)
+                redrawBooks()
+
+            break;
+        }
+}
+
+function redrawBooks() {
+    console.log('redrawing')
+    $('#ask tbody').not(':first').remove();
+    $('#bid tbody').not(':first').remove();
+
+    for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < OB[i].length; j++) {
+            let rowE = document.createElement("tr");
+
+            let priceE = document.createElement('td');
+            priceE.innerText = OB[i][j].price;
+
+            let amountE = document.createElement('td');
+            amountE.innerText = OB[i][j].amount;
+
+            let removeE = document.createElement('td');
+            removeE.classList.add("order-remove-invisible");
+            removeE.innerText = "X";
+
+            rowE.append(priceE)
+            rowE.append(amountE)
+            rowE.append(removeE)
+
+            if (i == 0) $('#bid tbody').append(rowE);
+            if (i == 1) $('#ask tbody').append(rowE);
+        }
+    }
+
+
+}
+*/
 
 // Add new entry on local history
 socket.on('historyInfo', (data) => {
