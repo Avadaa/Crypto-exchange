@@ -6,8 +6,6 @@ script.type = 'text/javascript';
 document.getElementsByTagName('head')[0].appendChild(script);
 
 //let socket = io("http://localhost:3001");
-
-//let socket = io("http://ezgains-backend.eu-west-1.elasticbeanstalk.com:3001");
 let socket = io("http://ezgains-backend.eu-west-1.elasticbeanstalk.com:3001/", { transports: ['websocket', 'polling', 'flashsocket'] });
 
 
@@ -181,8 +179,13 @@ socket.on('changeOrder', (data) => {
         let rowPrice = $(rows[i]).children()[0].innerText;
         if (rowPrice == data.price) {
             let current = Number($(rows[i]).children()[1].innerText);
-            current = current + data.change;
-            $(rows[i]).children()[1].innerText = current;
+
+            if (user && data && user.id == data.userID)
+                document.getElementById('ethAvailable').innerText = `ETH: ${round(Number(document.getElementById('ethAvailable').innerText) + round(data.change))}`
+
+            current = round(round(current) + round(data.change));
+            $(rows[i]).children()[1].innerText = round(current);
+
         }
     }
 })
