@@ -271,9 +271,9 @@ function checkSpread() {
     if (spread > mmConf.REALSPREAD) {
         moveAsks = asks[0] - index > index - bids[0] ? true : false;
         if (moveAsks)
-            asksDown(Number((asks[0] - mmConf.SPREAD).toFixed(2)));
+            asksDown(Number((asks[0] - mmConf.SPREAD / 5).toFixed(2)));
         else
-            bidsUp(Number((bids[0] + mmConf.SPREAD).toFixed(2)));
+            bidsUp(Number((bids[0] + mmConf.SPREAD / 5).toFixed(2)));
 
         pushTrade();
         weighBooks();
@@ -418,6 +418,7 @@ function bidsDown(price) {
 }
 
 function random() {
-    return Number(Math.random().toFixed(2))
+    //return Number((Math.random() / 10).toFixed(2))
+    return 0;
 }
 

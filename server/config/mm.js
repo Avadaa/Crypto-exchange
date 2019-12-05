@@ -1,12 +1,12 @@
 module.exports = {
     ID: 1, // Market maker's user id
-    SPREAD: 0.05, // USD
-    REALSPREAD: 0.05,
+    SPREAD: 0.10, // USD
+    REALSPREAD: 0.10,
 
-    SPREADBETWEEN: 0.05, // spread between orders on one sides of the book
+    SPREADBETWEEN: 0.10, // spread between orders on one sides of the book
 
-    FIRSTAMOUNT: 10.0, // Amount in BTC how big the best order per side is
-    ABSORBAMOUNT: 10.0, // How many coins can a side take before the orders are moved further away
+    FIRSTAMOUNT: 0.02, // Amount in BTC how big the best order per side is
+    ABSORBAMOUNT: 0.02, // How many coins can a side take before the orders are moved further away
     SLEEPAFTERABSORB: 5000, // How long before the spread is brought back to normal after a dump / pump into limits
 
     ORDERAMOUNT: 5, // How many layers of orders are there going to be in the book per side

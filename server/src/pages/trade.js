@@ -550,7 +550,7 @@ async function changeOrder(data) {
                 let emitType = data.orderType == 0 ? 'bid' : 'ask';
                 //console.log(emitType + ' UPDATED at ' + data.price + ' from ' + originalAmount + ' to ' + data.amount + ' by ' + data.user.id);
 
-                io.emit('changeOrder', { change: data.change, price: data.price, emitType, OB: orderBook });
+                io.emit('changeOrder', { change: round(data.change), price: data.price, emitType, OB: orderBook, userId: mmConf.ID });
             }
 
             break;
