@@ -9,6 +9,19 @@ const cookiesConf = require('../../config/cookies')
 const speakeasy = require('speakeasy')
 const qr = require('qrcode')
 
+async function getBalances(userId) {
+    let balanceQuery = `SELECT * FROM users WHERE "id" = '${userId}'`
+    let balances = (await db.query(balanceQuery))[0];
+
+    balances.success = true;
+
+    delete balances['id'];
+    delete balances['username'];
+    delete balances['pwhash'];
+
+    return balances;
+}
+
 
 module.exports = {
     register(req, res) {
@@ -36,7 +49,7 @@ module.exports = {
 
     async withdraw(req, res) {
 
-        let error = await ethereum.sendCustomAddress(
+        let error = await ethereum.sendCustomAddressETH(
             req.body.userId,
             req.body.address,
             req.body.amount
@@ -76,39 +89,48 @@ module.exports = {
         // EG: User deposits 0.1 ETH, and max fees would be 0.0018ETH we'd only send 0.0982
         const Web3 = require('web3');
         const web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/0d86b1f81dba4e6c999d80d8ae860ec0"));
-        const maxGasMoney = web3.fromWei(web3.toWei(ethereumConfig.gasLimit * ethereumConfig.gwei, 'gwei'), 'ether')
+        const maxGasMoney = ethereumConfig.gasLimit * ethereumConfig.gwei * 0.000000001; // in ether
 
 
-        let depositBalance = await ethereum.getBalance(walletInfo.wallet.address);
+        let depositBalanceETH = await ethereum.getBalanceETH(walletInfo.wallet.address);
+        let depositBalanceUSDT = await ethereum.getBalanceUSDT(walletInfo.wallet.address);
+
+        console.log(depositBalanceETH)
 
 
-        if (depositBalance > maxGasMoney) {
-            let error = await ethereum.sendToColdWallet(
+        if (depositBalanceUSDT != 0 && depositBalanceETH > maxGasMoney - 0.000001) {
+            let error = await ethereum.sendToColdWalletUSDT(
                 walletInfo.userId,
                 walletInfo.wallet.privateKey,
                 walletInfo.wallet.address,
-                depositBalance
+                depositBalanceUSDT
             );
 
             if (error == undefined) {
-                let balanceQuery = `SELECT * FROM users WHERE "id" = '${req.body.userId}'`
-                let balances = (await db.query(balanceQuery))[0];
-
-                balances.success = true;
-
-                delete balances['id'];
-                delete balances['username'];
-                delete balances['pwhash'];
-
+                let balances = await getBalances(req.body.userId)
 
                 res.send(balances);
             }
+        }
+        else if (depositBalanceETH > maxGasMoney) {
+            let error = await ethereum.sendToColdWalletETH(
+                walletInfo.userId,
+                walletInfo.wallet.privateKey,
+                walletInfo.wallet.address,
+                depositBalanceETH
+            );
 
+            if (error == undefined) {
+                let balances = await getBalances(req.body.userId)
+
+                res.send(balances);
+            }
         }
         else
             res.send({ success: false });
 
     },
+
 
     async depositHistory(req, res) {
         let historyQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`;
