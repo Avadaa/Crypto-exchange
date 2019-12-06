@@ -8,12 +8,9 @@ document.getElementsByTagName('head')[0].appendChild(script);
 //let socket = io("http://localhost:3001");
 let socket = io("http://ezgains-backend.eu-west-1.elasticbeanstalk.com:3001/", { transports: ['websocket', 'polling', 'flashsocket'] });
 
-
-
 let OB;
-let currentPrice
-
 let user;
+let currentPrice
 
 socket.on('transmitOB', (data) => {
     OB = data.OB;
@@ -22,8 +19,8 @@ socket.on('transmitOB', (data) => {
 
 });
 
-
-
+// Initiated order
+// Decided whether we're emiting an 'add order', 'market order', or maybe both with appropriate amounts
 export function order(action, amount, price, market) {
 
     amount = round(amount);
@@ -32,32 +29,39 @@ export function order(action, amount, price, market) {
 
 
     if (!market && amount > 0 && price > 0)
-        if (action == 'buy' && (price * amount <= user.availableUSD) || ((action == 'sell' && amount <= user.availableETH || (amount == 420 && (price == 1336 || price == 1338))))) {
-            //Limit order as a market order (trying to set a limit bid above the current lowest ask)
-            if (action == 'buy' && OB[1].length > 0 && price >= OB[1][0].price || action == 'sell' && OB[0].length > 0 && price <= OB[0][0].price)
+        if (action == 'buy' &&
+            (price * amount <= user.availableUSD) ||
+            ((action == 'sell' && amount <= user.availableETH))) {
+
+            //Limit order as a market order (trying to set a limit bid above the current lowest ask, for example)
+            if (action == 'buy' && OB[1].length > 0 && price >= OB[1][0].price ||
+                action == 'sell' && OB[0].length > 0 && price <= OB[0][0].price)
+
                 limitAsMarket(amount, price, orderType);
             else
                 socket.emit('order', { task: 'addOrder', amount, price, user, orderType });
 
         }
-    if (market && amount > 0 && ((OB[1][0] && action == 'buy') || (OB[0][0] && action == 'sell')))
-        if (action == 'buy' && (OB[1][0].price * amount <= user.availableUSD) || (action == 'sell' && amount <= user.availableETH)) {
+    if (market &&
+        amount > 0 &&
+        ((OB[1][0] && action == 'buy') || (OB[0][0] && action == 'sell')))
+
+        if (action == 'buy' &&
+            (OB[1][0].price * amount <= user.availableUSD) || (action == 'sell' && amount <= user.availableETH)) {
             socket.emit('order', { task: 'marketOrder', amount, price: -1, user, orderType });
-
         }
-
-
 }
 
 socket.on('updateIndex', async (data) => {
     $('#index').text(`Index: ${data.index}`);
 })
 
-
+// Client side stuff for adding an order
 socket.on('addOrder', async (data) => {
     let matchingPriceAmount = matchingPrices(data.type, data.order.price);
 
-    if (data.userID && user.id && data.type) {
+    // Update user balances on client side
+    if (user && data.userID && user.id && data.type) {
         if (data.userID == user.id && data.type == 'bid') {
             user.availableUSD -= data.order.price * data.order.amount;
             document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
@@ -69,7 +73,7 @@ socket.on('addOrder', async (data) => {
         }
     }
 
-
+    // Add an entry to the books IF there wasn't an order at that spesific price already
     if (matchingPriceAmount == false) {
         let html = `<tr><td class="order-price">${data.order.price}</td><td class="order-amount">${data.order.amount}</td><td class="order-remove-invisible">X</td></tr>`
         $(`#${data.type} tbody > tr:eq(${data.index})`).after(html)
@@ -77,7 +81,6 @@ socket.on('addOrder', async (data) => {
     else {
         let children = $(`#${data.type} tbody`).children();
         $(children[matchingPriceAmount.index]).children()[1].innerText = round((Number(matchingPriceAmount.amount) + Number(data.order.amount)));
-
     }
 
     OB = data.OB;
@@ -86,6 +89,7 @@ socket.on('addOrder', async (data) => {
         addHistory({ price: data.order.price, amount: data.order.amount, side: data.type, timeStamp: data.timeStamp, historyId: data.historyId, type: 'Limit' });
 });
 
+// Client side stuff when an order has been removed
 socket.on('removeOrder', async (data) => {
     OB = data.OB;
     let side = data.side == 0 ? 'bid' : 'ask';
@@ -103,8 +107,9 @@ socket.on('removeOrder', async (data) => {
 
             // If a certain price has multiple orders from multiple users, just update the amount
             if (Number($(rows[i]).children()[1].innerText) > data.amount) {
+
                 $(rows[i]).children()[1].innerText = round((Number($(rows[i]).children()[1].innerText) - data.amount));
-                if (Number($(rows[i]).children()[1].innerText < 0.000001))
+                if (Number($(rows[i]).children()[1].innerText < 0.000001)) // If the price has $0 to offer, remove the row from the books
                     $(rows[i]).remove();
             }
 
@@ -124,23 +129,16 @@ socket.on('removeOrder', async (data) => {
             user.availableUSD += data.price * data.amount;
 
             document.getElementById('usdAvailable').innerText = `USD: ${round(user.availableUSD)}`
-
         }
         if (data.userClicked && side == 'ask') {
             user.availableETH += data.amount;
             document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
         }
-
     }
-
-
-
-
-
-
-
 });
 
+// Client side stuff when there has been a market order
+// Changing the available balances for user and editing histories
 socket.on('marketOrder', async (data) => {
     document.getElementById('currentPrice').innerText = `${data.currentPrice}`;
     OB = data.OB;
@@ -163,19 +161,17 @@ socket.on('marketOrder', async (data) => {
             if (data.type == 'market')
                 addHistory({ price: data.currentPrice, amount: data.amount, side: data.side, timeStamp: data.timeStamp, historyId: data.orderId, type: 'Market' });
         }
-
-
-
-
     }
 });
 
-
+// Client-side stuff when an order has been modified
 socket.on('changeOrder', (data) => {
     OB = data.OB
     let rows = $($(`#${data.emitType}`).children()[0]).children()
+
     for (let i = 1; i < rows.length; i++) {
         let rowPrice = $(rows[i]).children()[0].innerText;
+
         if (rowPrice == data.price) {
             let current = Number($(rows[i]).children()[1].innerText);
 
@@ -184,12 +180,13 @@ socket.on('changeOrder', (data) => {
 
             current = round(round(current) + round(data.change));
             $(rows[i]).children()[1].innerText = round(current);
-            validateBooks()
+            //validateBooks()
         }
     }
 })
 
 /*
+// Not tested //
 function validateBooks() {
     let rows = $($(`#ask`).children()[0]).children()
     let row;
@@ -235,8 +232,6 @@ function redrawBooks() {
             if (i == 1) $('#ask tbody').append(rowE);
         }
     }
-
-
 }
 */
 
@@ -292,9 +287,7 @@ function limitAsMarket(amount, price, orderType) {
         // Market
         if (orderType == 0 && (marketPrice * amountBetween <= user.availableUSD) || orderType == 1 && amountBetween <= user.availableETH) {
             socket.emit('order', { task: 'marketOrder', amount: amountBetween, price: -1, user, orderType });
-
         }
-
 
         // Limit (bid or ask)
         if (orderType == 0 && (price * amount <= user.availableUSD))
@@ -302,7 +295,6 @@ function limitAsMarket(amount, price, orderType) {
 
         if (orderType == 1 && amount <= user.availableETH)
             socket.emit('order', { task: 'addOrder', amount: amount - amountBetween, price, user, orderType });
-
     }
 
     // If only a market order is needed
@@ -311,27 +303,24 @@ function limitAsMarket(amount, price, orderType) {
 }
 
 
+// Clicking an order-removal -button or the market-order checkbox 
 document.addEventListener('click', () => {
     if (event.target.classList[0] == 'order-remove-visible') {
         let clickedRow = $(event.target.parentNode);
         let price = Number(clickedRow.children()[0].innerText);
         let side = $(clickedRow.parent()).parent().attr('id');
 
-
         socket.emit('order', { task: 'removeOrder', price, side, user })
     }
-
 
     // Disable 'price' -input field if 'market' orders are chosen
     if (event.target.id == 'market-limit') {
         //document.getElementById('price').disabled = document.getElementById('price').disabled ? false : true;
         document.getElementById('price').classList.toggle('disabled');
-
     }
 })
 
-
-
+// Find how much is there in the books on a specific price
 function matchingPrices(side, price) {
     let children = $(`#${side} tbody`).children();
     for (let i = 1; i < children.length; i++) {
@@ -342,6 +331,8 @@ function matchingPrices(side, price) {
     return false;
 }
 
+// Goes through the order book and checks which prices the user has orders at
+// All the prices that apply, get an x-button to make it possible to remove those orders
 export function findOwnOrders() {
     let prices = [[], []];
     for (let i = 0; i < 2; i++)
@@ -361,8 +352,6 @@ export function findOwnOrders() {
 }
 
 export async function receiveUserInfo(data) {
-
-
     user = data;
 
     user.id = user.userId
@@ -371,7 +360,7 @@ export async function receiveUserInfo(data) {
 }
 
 
-
+// Add one entry to user's trading history
 function addHistory(data) {
     data.amount = round(data.amount);
     if (data.amount > 0) {
@@ -394,6 +383,7 @@ function editLimitSideHistory(data) {
     $(`#history-${data.orderId}`).children()[2].innerText = data.filled;
 }
 
+
 function cancelInHistory(data) {
     for (let i = 0; i < data.orderIds.length; i++)
         $(`#history-${data.orderIds[i]}`).children()[5].innerText = 'Cancelled';
@@ -404,6 +394,7 @@ function round(num) {
     return Math.round(num * 10000000) / 10000000;
 }
 
+// Renders user's trading history
 export function drawHistory(data) {
 
     data.forEach((e) => {
@@ -419,10 +410,8 @@ export function drawHistory(data) {
 
 
         let html = `<tr id="history-${e.id}" style="font-size: 0.55em;"><td>${e.time}</td><td>${e.price}</td><td>${filled}</td><td>${e.amount}</td><td style="${classSide}">${e.type}</td><td>${e.status}</td>`;
-        //$('#user-history').append(html);
 
         $(`#user-history tr:first`).after(html);
-
     })
 }
 

@@ -7,25 +7,11 @@ setTimeout(() => {
 }, 200);
 let mmConf = require('../../config/mm')
 
-// Didn't get socket IO to work on client side without an 
-// additional http connection on a different port
 
-
+// IO didnt want to work on the same port, so hosted on a different one
 const http = require('http').createServer(server.app)
-
-http.listen(3001, () => {
-    console.log('IO server runningg')
-})
-
-
-
-
-
-
-//const io = require('socket.io')(3001);
+http.listen(3001, () => { console.log('IO server runningg') })
 const io = require('socket.io')(http);
-
-
 
 
 // [[Bids],                [Asks]]
@@ -41,9 +27,7 @@ let processing = false;
 let executing = false;
 
 
-
 io.on('connect', async (socket) => {
-
 
     setTimeout(() => {
         socket.emit('transmitOB', { OB: orderBook, currentPrice });
@@ -52,7 +36,6 @@ io.on('connect', async (socket) => {
     socket.on('order', (data) => {
         push(data);
     });
-
 })
 
 function push(data) {
@@ -70,7 +53,6 @@ async function executeTasks() {
 
             que.shift();
         }
-
     }
 
     executing = false;
@@ -90,15 +72,15 @@ async function processQue(data) {
         await changeOrder(data);
 }
 
+
 // Adding a new order (bid or ask) to the books
-// 1. Check if storing or loading order book
-// 2. Confirm balance
-// 3. Add a new entry to server side OB
-// 4. Update 'reserved' amount in database
-// 5. Create an entry to history table in database
+// 1. Confirm balance
+// 2. Add a new entry to server side OB
+// 3. Update 'reserved' amount in database
+// 4. Create an entry to history table in database
 //      The market maker doesn't store history. The algo is constantly changing order amounts, so
 //      that'd require constant DB calls and it'd be a mess. Not worth the load either.
-// 6. Emit to client side
+// 5. Emit to client side
 async function addOrder(data) {
     processing = true;
 
@@ -112,124 +94,97 @@ async function addOrder(data) {
     let index = findIndex('server', orderType, OBobject.price);
     let serverIndex = index;
 
-
-    //--------------------------------1--------------------------------
-    // Secret inputs to save and load order books to and from the database
-    // Negative impact: an unexpected system shutdown would not save the books
-    if (OBobject.amount == 420) {
-        if (OBobject.price == 1336) {
-            console.log(orderBook)
-            let saveQuery = `UPDATE order_book SET "date" = '${new Date()}', "data" = '${JSON.stringify(orderBook)}', "currentPrice" = '${currentPrice}' WHERE "id" = '1'`;
-            db.query(saveQuery);
-            console.log('Order books saved.');
-            //console.log(await db.query(`INSERT INTO order_book("id", "date", "data", "currentPrice") VALUES('1', '${new Date()}', '${JSON.stringify(orderBook)}', '${currentPrice}')`));
-        }
-
-        if (OBobject.price == 1338) {
-
-            let loadQuery = 'SELECT * FROM order_book'; // Always only one entry
-            let results = await db.query(loadQuery);
-            results = results[0];
-            orderBook = results.data;
-            currentPrice = results.currentPrice;
-            console.log('Order books loaded');
-        }
-    }
-
-    else {
-
-        let emitType = orderType == 0 ? 'bid' : 'ask';
-        let reserved = orderType == 0 ? 'reservedUSD' : 'reservedETH';
+    let emitType = orderType == 0 ? 'bid' : 'ask';
+    let reserved = orderType == 0 ? 'reservedUSD' : 'reservedETH';
 
 
-        // If a bid is set, resrve 'amount * price' worth of dollars
-        // If an ask is set, reserve 'amount' worth of ETH
-        let change = orderType == 0 ? round(OBobject.amount * OBobject.price) : round(OBobject.amount);
+    // If a bid is set, resrve 'amount * price' worth of dollars
+    // If an ask is set, reserve 'amount' worth of ETH
+    let change = orderType == 0 ? round(OBobject.amount * OBobject.price) : round(OBobject.amount);
+
+
+    //--------------------------------1-------------------------------- 
+    // Do another test to check that the user has sufficient balance for the order
+    let userinfo = await db.query(`SELECT * FROM users WHERE "id" = ${OBobject.id}`);
+
+    // If adding a bid, availableUSD >= change
+    // If adding an ask, available ETH >= change
+    let userHasBalance = emitType == 'bid' ? userinfo[0].balanceUSD - userinfo[0].reservedUSD >= change : userinfo[0].balanceETH - userinfo[0].reservedETH >= change;
+
+
+
+    if (userHasBalance) {
 
 
         //--------------------------------2-------------------------------- 
-        // Do another test to check that the user has sufficient balance for the order
-        let userinfo = await db.query(`SELECT * FROM users WHERE "id" = ${OBobject.id}`);
-
-        // If adding a bid, availableUSD >= change
-        // If adding an ask, available ETH >= change
-        let userHasBalance = emitType == 'bid' ? userinfo[0].balanceUSD - userinfo[0].reservedUSD >= change : userinfo[0].balanceETH - userinfo[0].reservedETH >= change;
+        // Add a new entry to the server-side order book
+        orderBook[orderType].splice(index, 0, OBobject);
 
 
+        index = findIndex('client', orderType, OBobject.price);
 
-        if (userHasBalance) {
-
-
-            //--------------------------------3-------------------------------- 
-            // Add a new entry to the server-side order book
-            orderBook[orderType].splice(index, 0, OBobject);
-
-
-            index = findIndex('client', orderType, OBobject.price);
-
-            if (orderType == 0)
-                index -= 1;
-            if (orderType == 1) {
-                index = compactOB()[1].length - index;
-            }
-
-
-            //--------------------------------4--------------------------------        
-            // Update 'reserved' amount in database
-            let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" + ${change} WHERE "id" = ${OBobject.id}`;
-            await db.query(updateUserBalance);
-
-
-            if (OBobject.id != mmConf.ID)
-                console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
-
-            //--------------------------------5--------------------------------
-            let historyId = [{ id: null }];
-            let timeStamp = null;
-            if (mmConf.ID != OBobject.id) {
-
-                let time = new Date();
-                timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
-
-                let buySell = emitType == 'bid' ? 'buy' : 'sell';
-                let historyQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}', '${OBobject.amount}') RETURNING id`;
-                historyId = null;
-                historyId = await db.query(historyQuery);
-
-
-                // Adding an order id and to the books 
-                // Helps quite a lot when handling the front-end side regarding user's trade history
-                orderBook[orderType][serverIndex].orderId = historyId[0].id;
-            }
-
-
-            // Adding original size to help keep track of the total filled amount
-            orderBook[orderType][serverIndex].originalAmount = OBobject.amount;
-
-            //--------------------------------6--------------------------------    
-            io.emit('addOrder', {
-                order: {
-                    price: OBobject.price,
-                    amount: OBobject.amount
-                },
-                index: index,
-                type: emitType,
-                OB: orderBook,
-                userID: OBobject.id,
-                timeStamp,
-                historyId: historyId[0].id
-            });
+        if (orderType == 0)
+            index -= 1;
+        if (orderType == 1) {
+            index = compactOB()[1].length - index;
         }
+
+
+        //--------------------------------3--------------------------------        
+        // Update 'reserved' amount in database
+        let updateUserBalance = `UPDATE users SET "${reserved}" = "${reserved}" + ${change} WHERE "id" = ${OBobject.id}`;
+        await db.query(updateUserBalance);
+
+
+        if (OBobject.id != mmConf.ID)
+            console.log(emitType + ' SET at ' + OBobject.price + ' for ' + OBobject.amount + ' by ' + OBobject.id);
+
+        //--------------------------------4--------------------------------
+        let historyAndTimestamp = await addEntryToHistory(OBobject, emitType, orderType, serverIndex)
+        let historyId = historyAndTimestamp.historyId;
+        let timeStamp = historyAndTimestamp.timeStamp;
+
+        // Adding original size to help keep track of the total filled amount
+        orderBook[orderType][serverIndex].originalAmount = OBobject.amount;
+
+        //--------------------------------5--------------------------------    
+        io.emit('addOrder', {
+            order: {
+                price: OBobject.price,
+                amount: OBobject.amount
+            },
+            index: index,
+            type: emitType,
+            OB: orderBook,
+            userID: OBobject.id,
+            timeStamp,
+            historyId: historyId
+        });
     }
-
-
-
 
     processing = false;
 }
 
+// Create an entry to history table in database
+async function addEntryToHistory(OBobject, emitType, orderType, serverIndex) {
+    let historyId = [{ id: null }];
+    let timeStamp = null;
+    if (mmConf.ID != OBobject.id) {
 
+        let time = new Date();
+        timeStamp = `${time.getDate()}/${time.getMonth()}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
 
+        let buySell = emitType == 'bid' ? 'buy' : 'sell';
+        let historyQuery = `INSERT INTO history("userId", "filled", "time", "side", "type", "status", "price", "amount") VALUES('${OBobject.id}', '0','${timeStamp}', '${buySell}', 'limit', 'untouched', '${OBobject.price}', '${OBobject.amount}') RETURNING id`;
+        historyId = null;
+        historyId = await db.query(historyQuery);
+
+        // Helps quite a lot when handling the front-end side regarding user's trade history
+        orderBook[orderType][serverIndex].orderId = historyId[0].id;
+
+    }
+    return { historyId: historyId[0].id, timeStamp };
+}
 
 
 // Delete all instances on the same price made by the same user
@@ -245,6 +200,7 @@ async function removeOrder(data) {
     let side = data.side == 'bid' ? 0 : 1;
     for (let i = 0; i < orderBook[side].length; i++) {
         let obRow = orderBook[side][i];
+
         if (obRow.price == data.price && obRow.id == data.user.id) {
             amountRemoved += obRow.amount;
             removedOrderIds.push(obRow.orderId);
@@ -258,8 +214,8 @@ async function removeOrder(data) {
         }
     }
 
-    // If a bid is set, resrve 'amount * price' worth of dollars
-    // If an ask is set, reserve 'amount' worth of ETH
+    // If a bid is set, remove from reserved 'amount * price' worth of dollars
+    // If an ask is set, remove from reserved 'amount' worth of ETH
     let change = side == 0 ? amountRemoved * data.price : amountRemoved;
 
     let reserved = side == 0 ? 'reservedUSD' : 'reservedETH';
@@ -297,11 +253,12 @@ async function removeOrder(data) {
 }
 
 // Making an actual trade (market order)
+// The  function is quite large, but didn't find easy ways to slice it :(
+// Especially the part where we're updating user's balances; a lot of small moving parts and names, but it still looks the same
 async function marketOrder(data) {
 
-
-    //console.log('Order ' + data.orderID + ' processing started');
     processing = true;
+
     // OBside = 0 --> selling to bids(orderBook[0])
     // Obside = 1 --> buying to asks (orderBook[1])
     let OBside = data.orderType == 0 ? 1 : 0;
@@ -361,11 +318,10 @@ async function marketOrder(data) {
             // Reduce from the order in the books
             OBrow.amount = OBrow.amount - data.amount;
 
-            // If the first order in the books wasn't enough, remove it
+            // If the order in the books was cleared, remove it
             if (OBrow.amount <= 0) {
                 orderBook[OBside].splice(0, 1);
                 data.amount = data.amount - round(amountAvailable);
-
             }
 
             // If it was, the market order is fully filled.
@@ -376,25 +332,23 @@ async function marketOrder(data) {
             // Updating the user's info who initiated the market order
             let marketTakeBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
             let marketTakeChange = OBside == 0 ? change : change * OBrow.price;
-            let updateTakeMarketSide = `UPDATE users SET "${marketTakeBalanceSide}" = "${marketTakeBalanceSide}" - ${round(marketTakeChange)} WHERE "id" = ${data.user.id}`
-            await db.query(updateTakeMarketSide);
+            marketUpdateUser(marketTakeBalanceSide, marketTakeChange, data.user.id, '-')
 
             let marketAddBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
             let marketAddChange = OBside == 0 ? change * OBrow.price : change;
-            let updateAddMarketSide = `UPDATE users SET "${marketAddBalanceSide}" = "${marketAddBalanceSide}" + ${round(marketAddChange)} WHERE "id" = ${data.user.id}`
-            await db.query(updateAddMarketSide);
+            marketUpdateUser(marketAddBalanceSide, marketAddChange, data.user.id, '+')
 
 
             // Update the user's info who was on the limit side
             let limitTakeBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
             let limitTakeChange = OBside == 0 ? change * OBrow.price : change;
-            let updateTakeLimittSide = `UPDATE users SET "${limitTakeBalanceSide}" = "${limitTakeBalanceSide}" - ${round(limitTakeChange)} WHERE "id" = ${OBrow.id}`
-            await db.query(updateTakeLimittSide);
+            marketUpdateUser(limitTakeBalanceSide, limitTakeChange, OBrow.id, '-')
 
             let limitAddBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
             let limitAddChange = OBside == 0 ? change : change * OBrow.price;
-            let updateAddLimitSide = `UPDATE users SET "${limitAddBalanceSide}" = "${limitAddBalanceSide}" + ${round(limitAddChange)} WHERE "id" = ${OBrow.id}`
-            await db.query(updateAddLimitSide);
+            marketUpdateUser(limitAddBalanceSide, limitAddChange, OBrow.id, '+')
+
+
 
             let marketSide = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
             marketSide = marketSide[0];
@@ -402,7 +356,7 @@ async function marketOrder(data) {
             limitSide = limitSide[0];
 
 
-            // Update the changed limit order in  history-table in db
+            // Update the changed limit order in history-table in db
             let orderStatus = null;
             let amountFilled = null;
             if (mmConf.ID != OBrow.id) {
@@ -410,11 +364,10 @@ async function marketOrder(data) {
                 amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
                 let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
                 await db.query(makerHistoryQuery);
-
             }
 
 
-            // Add an entry for the taker-side user in db
+            // Add an entry for the taker-side history user in db
             let buySell = null;
             let timeStamp = null;
             let marketSideOrderId = [{ id: null }];
@@ -434,6 +387,8 @@ async function marketOrder(data) {
                 buySell = buySell == 'sell' ? 'ask' : 'bid';
             }
 
+            // If mm's order was touched, do calculations if the amount traded was big enough for triggering 
+            //      the 'enlargening spead' -protocol
             if (OBrow.id == mmConf.ID) {
                 if (buySell == 'ask') {
                     mm.setBidAbsorb(change);
@@ -491,8 +446,6 @@ async function marketOrder(data) {
                 side: OBside
             })
 
-
-
             let sellOrBuy = OBside == 0 ? 'sell' : 'buy';
             console.log(sellOrBuy + ' MARKET at ' + OBrow.price + ' for ' + round(change) + ' by ' + data.user.id);
 
@@ -500,12 +453,19 @@ async function marketOrder(data) {
             // If the market order didn't get filled, repeat the process
             if (data.amount > 0)
                 marketOrder(data);
-
         }
     }
 
     processing = false;
 }
+
+// Update user's wallet info on market order
+async function marketUpdateUser(side, change, id, addOrDeduct) {
+    let userInfoQuery = `UPDATE users SET "${side}" = "${side}" ${addOrDeduct} ${round(change)} WHERE "id" = ${id}`
+    await db.query(userInfoQuery);
+}
+
+
 
 // Currently for MM algorithm only. 
 // Minimal error processing, because users don't have access.
@@ -556,9 +516,6 @@ async function changeOrder(data) {
             break;
         }
     }
-
-
-
     processing = false;
 }
 
@@ -648,5 +605,4 @@ module.exports = {
     push,
     orderBook,
     round
-
 }
