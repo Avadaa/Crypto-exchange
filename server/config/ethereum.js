@@ -1,5 +1,5 @@
 module.exports = {
-    gasLimit: 120000,
+    gasLimit: 210000,
     gwei: 12,
     cooldown: 120000
 }

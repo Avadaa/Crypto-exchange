@@ -96,9 +96,9 @@ module.exports = {
         let depositBalanceUSDT = await ethereum.getBalanceUSDT(walletInfo.wallet.address);
 
         console.log(depositBalanceETH)
+        console.log(maxGasMoney)
 
-
-        if (depositBalanceUSDT != 0 && depositBalanceETH > maxGasMoney - 0.000001) {
+        if (depositBalanceUSDT != 0 && depositBalanceETH > maxGasMoney * 0.9) {
             let error = await ethereum.sendToColdWalletUSDT(
                 walletInfo.userId,
                 walletInfo.wallet.privateKey,
@@ -112,12 +112,12 @@ module.exports = {
                 res.send(balances);
             }
         }
-        else if (depositBalanceETH > maxGasMoney) {
+        else if (depositBalanceUSDT == 0 && depositBalanceETH > maxGasMoney) {
             let error = await ethereum.sendToColdWalletETH(
                 walletInfo.userId,
                 walletInfo.wallet.privateKey,
                 walletInfo.wallet.address,
-                depositBalanceETH
+                depositBalanceETH - maxGasMoney
             );
 
             if (error == undefined) {

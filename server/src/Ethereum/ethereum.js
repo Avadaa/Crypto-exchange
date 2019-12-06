@@ -200,7 +200,7 @@ module.exports = {
 
         }
         else
-            return 'You can request a withdraw every two minutes. Please wait before sending a new request.';
+            return 'You can request a withdrawal every two minutes. Please wait before sending a new request.';
     },
 
     sendToColdWalletETH: async (userId, fromPk, fromAddress, balance) => {
@@ -213,7 +213,7 @@ module.exports = {
 
         if (timeDifference > ethConfig.cooldown) {
 
-            let balanceWei = web3.utils.toWei(balance, 'ether');
+            let balanceWei = web3.utils.toWei((balance).toString(), 'ether');
             let gasLimit = ethConfig.gasLimit;
             let gWei = ethConfig.gwei;
             let pk = Buffer.from(fromPk.slice(2, fromPk.length), 'hex');
@@ -235,7 +235,8 @@ module.exports = {
                         web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'), async (err, hash) => {
                             if (!err) {
 
-                                let amount = web3.utils.fromWei((balanceWei - gasLimit * web3.utils.toWei(gWei.toString(), 'gwei')).toString(), 'ether');
+                                //let amount = web3.utils.fromWei((balanceWei - gasLimit * web3.utils.toWei(gWei.toString(), 'gwei')).toString(), 'ether');
+                                let amount = balance;
                                 let updateBalanceQuery = `UPDATE users SET "balanceETH" = "balanceETH" + ${amount} WHERE "id" = ${userId}`;
                                 db.query(updateBalanceQuery);
 
