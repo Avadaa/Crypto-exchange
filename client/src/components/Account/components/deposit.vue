@@ -2,7 +2,7 @@
   <div id="deposit">
     <div id="address">
       <div>
-        <p>Your personal deposit address (ETH and USDT)</p>
+        <p id="personal-address">Your personal deposit address (ETH and USDT)</p>
         <img
           src="https://chart.googleapis.com/chart?cht=qr&chl=0xef99ec41d04fbB041eDFEDf83bcBBdEB32cF4366&chs=180x180&choe=UTF-8&chld=L|2"
           alt="Deposit address QR code"
@@ -34,6 +34,7 @@
             :class="[{'title': index === 0}, {'even': index % 2 == 0}]"
           >
             <td width="300">{{deposit.date}}</td>
+            <td width="50">{{deposit.currency}}</td>
             <td width="180">{{deposit.amount}}</td>
           </tr>
         </table>
@@ -64,6 +65,7 @@ export default {
 
     depositHistory.data.unshift({
       date: "Date and time",
+      currency: "Currency",
       amount: "Amount"
     });
 
@@ -89,13 +91,11 @@ export default {
         user-select: none;
       }
     }
+    #deposit-info {
+      font-size: 1em;
+    }
   }
-  #deposit-info {
-    position: relative;
-    left: 20px;
-    font-size: 1em;
-    width: 400px;
-  }
+
   #deposit-list {
     color: white;
     margin-left: 70px;
@@ -138,6 +138,9 @@ export default {
   }
 }
 @media (max-width: 950px) {
+  #personal-address {
+    margin-top: 100px;
+  }
   #deposit {
     flex-direction: column;
     justify-content: center;

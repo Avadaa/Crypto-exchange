@@ -54,6 +54,92 @@ module.exports = {
 
     },
 
+    sendCustomAddressUSD: async (userId, toAddress, amount) => {
+        // To deal with pending transactions, only allow a withdraws every two minutes.
+        // Withdraw hash and TIME is inserted into a database table, and the timestamp is fetched every time the function is called.
+        let withdraws = await db.query(`SELECT * FROM withdraws WHERE "userId" = '${userId}'`);
+        let cooldownPlusOne = ethConfig.cooldown + 1;
+        let timeDifference = withdraws.length > 0 ? new Date() - Date.parse(withdraws[withdraws.length - 1].date) : cooldownPlusOne;
+
+        if (timeDifference > ethConfig.cooldown) {
+            let pkQuery = "SELECT * FROM coldwallet";
+            let coldWalletPk = (await db.query(pkQuery))[0].pk;
+
+            let gasLimit = ethConfig.gasLimit;
+            let gWei = ethConfig.gwei;
+            let pk = Buffer.from(coldWalletPk.slice(2, coldWalletPk.length), 'hex');
+            amount = amount * 1e6
+
+            let contractABI = [
+                // transfer
+                {
+                    'constant': false,
+                    'inputs': [
+                        {
+                            'name': '_to',
+                            'type': 'address'
+                        },
+                        {
+                            'name': '_value',
+                            'type': 'uint256'
+                        }
+                    ],
+                    'name': 'transfer',
+                    'outputs': [
+                        {
+                            'name': '',
+                            'type': 'bool'
+                        }
+                    ],
+                    'type': 'function'
+                }
+            ]
+
+            let contract = new web3.eth.Contract(contractABI, USDTtoken, { from: coldWalletAddress })
+            amount = web3.utils.toHex(amount)
+
+            web3.eth.getTransactionCount(coldWalletAddress)
+                .then((count) => {
+                    let rawTx = {
+                        'from': coldWalletAddress,
+                        'gasPrice': web3.utils.toHex(gWei * 1e9),
+                        'gasLimit': web3.utils.toHex(gasLimit),
+                        'to': USDTtoken,
+                        'value': 0x0,
+                        'data': contract.methods.transfer(toAddress, amount).encodeABI(),
+                        'nonce': web3.utils.toHex(count)
+                    }
+                    try {
+                        let tx = new Tx.Transaction(rawTx);
+                        tx.sign(pk)
+                        web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'), async (err, hash) => {
+                            if (!err) {
+
+                                let updateBalanceQuery = `UPDATE users SET "balanceUSD" = "balanceUSD" - ${round(parseInt(amount, 16) / 1000000)} WHERE "id" = ${userId}`;
+                                await db.query(updateBalanceQuery);
+
+                                console.log('User ' + userId + ' has withdrawn ' + parseInt(amount, 16) / 1000000 + ' USD');
+
+                                await db.query(`INSERT INTO withdraws("userId", "hash", "date", "amount", "currency") VALUES('${userId}', '${hash}', '${new Date}', ${round(parseInt(amount, 16) / 1000000)}, 'USD')`);
+
+                                return null;
+                            }
+                            else {
+                                console.log(err)
+                                return 'An error has occured. Please verify your inputs.';
+                            }
+                        })
+                    }
+                    catch (error) {
+                        console.log("An error occured during a deposit: " + error);
+                        return error;
+                    }
+                })
+        }
+        else
+            return 'You can request a withdrawal every two minutes. Please wait before sending a new request.';
+    },
+
     sendToColdWalletUSDT: async (userId, fromPk, fromAddress, balance) => {
         // To deal with pending transactions, only allow a deposit every two minutes.
         // Deposit hash and TIME is inserted into a database table, and the timestamp is fetched every time the function is called.
@@ -112,13 +198,13 @@ module.exports = {
                         web3.eth.sendSignedTransaction('0x' + tx.serialize().toString('hex'), async (err, hash) => {
                             if (!err) {
 
-                                let updateBalanceQuery = `UPDATE users SET "balanceUSD" = "balanceUSD" + ${balance} WHERE "id" = ${userId}`;
+                                let updateBalanceQuery = `UPDATE users SET "balanceUSD" = "balanceUSD" + ${round(balance)} WHERE "id" = ${userId}`;
 
                                 db.query(updateBalanceQuery);
 
                                 console.log('User ' + userId + ' has deposited ' + balance + ' USD');
 
-                                await db.query(`INSERT INTO deposits("userId", "hash", "date", "amount", "currency") VALUES('${userId}', '${hash}', '${new Date}', ${parseInt(amount, 16) / 1000000}, 'USD')`);
+                                await db.query(`INSERT INTO deposits("userId", "hash", "date", "amount", "currency") VALUES('${userId}', '${hash}', '${new Date}', ${round(parseInt(amount, 16) / 1000000)}, 'USD')`);
                                 return true;
 
 
@@ -139,6 +225,7 @@ module.exports = {
         }
 
     },
+
 
 
     sendCustomAddressETH: async (userId, toAddress, amount) => {
@@ -237,12 +324,12 @@ module.exports = {
 
                                 //let amount = web3.utils.fromWei((balanceWei - gasLimit * web3.utils.toWei(gWei.toString(), 'gwei')).toString(), 'ether');
                                 let amount = balance;
-                                let updateBalanceQuery = `UPDATE users SET "balanceETH" = "balanceETH" + ${amount} WHERE "id" = ${userId}`;
+                                let updateBalanceQuery = `UPDATE users SET "balanceETH" = "balanceETH" + ${round(amount)} WHERE "id" = ${userId}`;
                                 db.query(updateBalanceQuery);
 
                                 console.log('User ' + userId + ' has deposited ' + amount + ' ETH');
 
-                                await db.query(`INSERT INTO deposits("userId", "hash", "date", "amount", "currency") VALUES('${userId}', '${hash}', '${new Date}', ${amount}, 'ETH')`);
+                                await db.query(`INSERT INTO deposits("userId", "hash", "date", "amount", "currency") VALUES('${userId}', '${hash}', '${new Date}', ${round(amount)}, 'ETH')`);
 
                                 return true;
                             }

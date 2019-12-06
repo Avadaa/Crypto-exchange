@@ -55,7 +55,10 @@ module.exports = {
             let wallet = await db.query(walletQuery);
 
             let availableETH = wallet[0].balanceETH - wallet[0].reservedETH;
-            if (req.body.amount > availableETH)
+            let availableUSD = wallet[0].balanceUSD - wallet[0].reservedUSD;
+            if (req.body.currency == 'ETH' && req.body.amount > availableETH)
+                errorMsg.push('Please give a valid amount');
+            if (req.body.currency == 'USD' && req.body.amount > availableUSD)
                 errorMsg.push('Please give a valid amount');
 
         }

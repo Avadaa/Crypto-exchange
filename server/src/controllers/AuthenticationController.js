@@ -48,13 +48,19 @@ module.exports = {
     },
 
     async withdraw(req, res) {
-
-        let error = await ethereum.sendCustomAddressETH(
-            req.body.userId,
-            req.body.address,
-            req.body.amount
-        );
-
+        let error;
+        if (req.body.currency == 'ETH')
+            error = await ethereum.sendCustomAddressETH(
+                req.body.userId,
+                req.body.address,
+                req.body.amount
+            );
+        if (req.body.currency == 'USD')
+            error = await ethereum.sendCustomAddressUSD(
+                req.body.userId,
+                req.body.address,
+                req.body.amount
+            );
         if (error)
             res.send({
                 messages: [error],
@@ -95,8 +101,6 @@ module.exports = {
         let depositBalanceETH = await ethereum.getBalanceETH(walletInfo.wallet.address);
         let depositBalanceUSDT = await ethereum.getBalanceUSDT(walletInfo.wallet.address);
 
-        console.log(depositBalanceETH)
-        console.log(maxGasMoney)
 
         if (depositBalanceUSDT != 0 && depositBalanceETH > maxGasMoney * 0.9) {
             let error = await ethereum.sendToColdWalletUSDT(
@@ -133,7 +137,7 @@ module.exports = {
 
 
     async depositHistory(req, res) {
-        let historyQuery = `SELECT hash, date, amount FROM deposits WHERE "userId" = '${req.body.userId}'`;
+        let historyQuery = `SELECT hash, date, amount, currency FROM deposits WHERE "userId" = '${req.body.userId}'`;
         let depositHistory = (await db.query(historyQuery));
 
         res.send(depositHistory);
@@ -141,7 +145,7 @@ module.exports = {
 
     },
     async withdrawHistory(req, res) {
-        let historyQuery = `SELECT hash, date, amount FROM withdraws WHERE "userId" = '${req.body.userId}'`;
+        let historyQuery = `SELECT hash, date, amount, currency FROM withdraws WHERE "userId" = '${req.body.userId}'`;
         let withdrawHistory = (await db.query(historyQuery));
 
         res.send(withdrawHistory);

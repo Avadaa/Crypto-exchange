@@ -34,6 +34,7 @@
             :class="[{'title': index === 0}, {'even': index % 2 == 0}]"
           >
             <td width="300">{{withdrawal.date}}</td>
+            <td width="50">{{withdrawal.currency}}</td>
             <td width="180">{{withdrawal.amount}}</td>
           </tr>
         </table>
@@ -75,9 +76,9 @@ export default {
         document.getElementById("msg-ul").style.color = "rgb(182, 255, 188)";
 
         document.getElementById("ethAvailable").innerText =
-          res.data.balanceETH - res.data.reservedETH;
+          "ETH: " + (res.data.balanceETH - res.data.reservedETH);
         document.getElementById("usdAvailable").innerText =
-          res.data.balanceUSD - res.data.reservedUSD;
+          "USD: " + (res.data.balanceUSD - res.data.reservedUSD);
 
         document.getElementById("availableFunds-ETH").innerText = `${res.data
           .balanceETH - res.data.reservedETH} ETH`;
@@ -98,6 +99,7 @@ export default {
 
     withdrawHistory.data.unshift({
       date: "Date and time",
+      currency: "Currency",
       amount: "Amount"
     });
     this.withdrawHistory = withdrawHistory.data;
