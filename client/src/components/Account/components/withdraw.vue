@@ -1,13 +1,25 @@
 <template>
   <div id="withdraw">
     <div id="withdraw-input">
-      <p id="availableFunds"></p>
+      <p id="availableFunds">Available funds:</p>
+      <p id="availableFunds-ETH"></p>
+      <p id="availableFunds-USD"></p>
+      <div id="label-div">
+        <p id="withdraw-eth-label">ETH</p>
+        <p>USD</p>
+      </div>
+
+      <input type="range" min="0" max="1" value="0" class="slider" id="withdraw-slider" />
+      <br />
+      <br />
+      <br />
       <label for="address">Address</label>
       <input type="text" name="address" v-model="address" autocomplete="off" />
       <br />
       <label for="amount">Amount</label>
       <input type="number" name="amount" v-model="amount" autocomplete="off" />
       <br />
+
       <ul id="msg-ul">
         <li v-for="message in messages">{{message}}</li>
       </ul>
@@ -47,10 +59,12 @@ export default {
 
   methods: {
     async withdraw() {
+      let currency = $("#withdraw-slider").val() == 0 ? "ETH" : "USD";
       const res = await auth.withdraw({
         userId: this.$store.state.user.userId,
         amount: this.amount,
-        address: this.address
+        address: this.address,
+        currency
       });
       //document.getElementById("msg-ul").innerHTML = "";
       document.getElementById("msg-ul").style.color = "rgb(255, 196, 196)";
@@ -65,10 +79,10 @@ export default {
         document.getElementById("usdAvailable").innerText =
           res.data.balanceUSD - res.data.reservedUSD;
 
-        document.getElementById(
-          "availableFunds"
-        ).innerText = `Available funds:  ${res.data.balanceETH -
-          res.data.reservedETH} ETH`;
+        document.getElementById("availableFunds-ETH").innerText = `${res.data
+          .balanceETH - res.data.reservedETH} ETH`;
+        document.getElementById("availableFunds-USD").innerText = `${res.data
+          .balanceUSD - res.data.reservedUSD} USD`;
       }
     }
   },
@@ -95,9 +109,11 @@ export default {
     userWallets = userWallets.data.balance;
     try {
       document.getElementById(
-        "availableFunds"
-      ).innerText = `Available funds:  ${userWallets.balanceETH -
-        userWallets.reservedETH} ETH`;
+        "availableFunds-ETH"
+      ).innerText = `${userWallets.balanceETH - userWallets.reservedETH} ETH`;
+      document.getElementById(
+        "availableFunds-USD"
+      ).innerText = `${userWallets.balanceUSD - userWallets.reservedUSD} USD`;
     } catch (e) {}
   },
   mounted() {}
@@ -121,6 +137,46 @@ export default {
       li {
         list-style: none;
       }
+    }
+    input {
+      position: relative;
+      left: 10px;
+    }
+
+    #availableFunds-USD,
+    #availableFunds-ETH {
+      position: relative;
+      right: 5px;
+    }
+
+    #label-div {
+      position: relative;
+      display: flex;
+      flex-direction: row;
+      left: 170px;
+      #withdraw-eth-label {
+        padding-right: 65px;
+      }
+      margin-bottom: -20px;
+    }
+
+    #withdraw-slider {
+      position: relative;
+      left: 170px;
+
+      -webkit-appearance: none;
+    }
+
+    #withdraw-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      background: #4caf50;
+    }
+    button {
+      position: relative;
+      right: 5px;
     }
   }
 
