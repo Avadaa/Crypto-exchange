@@ -142,7 +142,7 @@ socket.on('removeOrder', async (data) => {
 socket.on('marketOrder', async (data) => {
     document.getElementById('currentPrice').innerText = `${data.currentPrice}`;
     OB = data.OB;
-
+    console.log(data)
     if (data.id == user.id) {
 
         user.balanceUSD = data.balanceUSD;
@@ -153,14 +153,11 @@ socket.on('marketOrder', async (data) => {
         user.balanceETH = data.balanceETH;
         user.availableETH = data.balanceETH - data.reservedETH;
         document.getElementById('ethAvailable').innerText = `ETH: ${round(user.availableETH)}`
+        if (data.type == 'limit')
+            editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
 
-        if (data.filled != null) {
-            if (data.type == 'limit')
-                editLimitSideHistory({ orderId: data.orderId, filled: data.filled, orderStatus: data.orderStatus });
-
-            if (data.type == 'market')
-                addHistory({ price: data.currentPrice, amount: data.amount, side: data.side, timeStamp: data.timeStamp, historyId: data.orderId, type: 'Market' });
-        }
+        if (data.type == 'market')
+            addHistory({ price: data.currentPrice, amount: data.amount, side: data.side, timeStamp: data.timeStamp, historyId: data.orderId, type: 'Market' });
     }
 });
 

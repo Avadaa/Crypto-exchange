@@ -332,21 +332,21 @@ async function marketOrder(data) {
             // Updating the user's info who initiated the market order
             let marketTakeBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
             let marketTakeChange = OBside == 0 ? change : change * OBrow.price;
-            marketUpdateUser(marketTakeBalanceSide, marketTakeChange, data.user.id, '-')
+            await marketUpdateUser(marketTakeBalanceSide, marketTakeChange, data.user.id, '-')
 
             let marketAddBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
             let marketAddChange = OBside == 0 ? change * OBrow.price : change;
-            marketUpdateUser(marketAddBalanceSide, marketAddChange, data.user.id, '+')
+            await marketUpdateUser(marketAddBalanceSide, marketAddChange, data.user.id, '+')
 
 
             // Update the user's info who was on the limit side
             let limitTakeBalanceSide = OBside == 0 ? 'balanceUSD' : 'balanceETH';
             let limitTakeChange = OBside == 0 ? change * OBrow.price : change;
-            marketUpdateUser(limitTakeBalanceSide, limitTakeChange, OBrow.id, '-')
+            await marketUpdateUser(limitTakeBalanceSide, limitTakeChange, OBrow.id, '-')
 
             let limitAddBalanceSide = OBside == 0 ? 'balanceETH' : 'balanceUSD';
             let limitAddChange = OBside == 0 ? change : change * OBrow.price;
-            marketUpdateUser(limitAddBalanceSide, limitAddChange, OBrow.id, '+')
+            await marketUpdateUser(limitAddBalanceSide, limitAddChange, OBrow.id, '+')
 
 
 
@@ -358,10 +358,10 @@ async function marketOrder(data) {
 
             // Update the changed limit order in history-table in db
             let orderStatus = null;
-            let amountFilled = null;
+            let amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
+
             if (mmConf.ID != OBrow.id) {
                 orderStatus = OBrow.amount < 0.000001 ? 'Filled' : 'Partially filled'
-                amountFilled = OBrow.amount < 0 ? OBrow.originalAmount : OBrow.originalAmount - OBrow.amount;
                 let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
                 await db.query(makerHistoryQuery);
             }
@@ -434,7 +434,7 @@ async function marketOrder(data) {
                 id: limitSide.id,
                 currentPrice,
                 OB: orderBook,
-                filled: amountFilled,
+                filled: round(amountFilled),
                 orderId: OBrow.orderId,
                 orderStatus
 
