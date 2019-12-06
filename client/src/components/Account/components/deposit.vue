@@ -2,7 +2,7 @@
   <div id="deposit">
     <div id="address">
       <div>
-        <p>Your personal deposit address</p>
+        <p>Your personal deposit address (ETH and USDT)</p>
         <img
           src="https://chart.googleapis.com/chart?cht=qr&chl=0xef99ec41d04fbB041eDFEDf83bcBBdEB32cF4366&chs=180x180&choe=UTF-8&chld=L|2"
           alt="Deposit address QR code"
@@ -14,6 +14,13 @@
             v-bind:href="'https://etherscan.io/address/' + this.$store.state.user.address"
             target="_blank"
           >{{this.$store.state.user.address}}</a>
+        </p>
+        <p id="deposit-info">
+          When depositing USDT, make sure the wallet has enough ETH for transaction fees
+          <br />
+          <br />Estimated requirement: 0.003
+          <br />
+          <br />TIP: you can instantly withdraw to your deposit address
         </p>
       </div>
     </div>
@@ -76,12 +83,18 @@ export default {
     div {
       p,
       img {
-        margin-left: 70px;
+        margin-left: 50px;
       }
       img {
         user-select: none;
       }
     }
+  }
+  #deposit-info {
+    position: relative;
+    left: 20px;
+    font-size: 1em;
+    width: 400px;
   }
   #deposit-list {
     color: white;
