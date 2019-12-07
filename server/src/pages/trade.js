@@ -479,7 +479,7 @@ async function changeOrder(data) {
 
     let reserved = '';
     for (let order of orderBook[data.orderType]) {
-        if (order.price == data.price) {
+        if (order.price == data.price && order.id == mmConf.ID) {
 
             originalAmount = order.amount;
             let change = round(data.amount - order.amount);

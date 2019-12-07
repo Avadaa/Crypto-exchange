@@ -383,27 +383,31 @@ function asksUp(price) {
 }
 
 function asksDown(price) {
-    obj = createOrderObj('removeOrder', 0, asks[mmConf.ORDERAMOUNT - 1], 1);
-    mmQue.push(obj);
+    if (trade.orderBook[0][0].price < price) {
+        obj = createOrderObj('removeOrder', 0, asks[mmConf.ORDERAMOUNT - 1], 1);
+        mmQue.push(obj);
 
-    asks.pop();
+        asks.pop();
 
-    obj = createOrderObj('addOrder', 0, price, 1)
-    mmQue.push(obj);
+        obj = createOrderObj('addOrder', 0, price, 1)
+        mmQue.push(obj);
 
-    asks.unshift(price);
+        asks.unshift(price);
+    }
 }
 
 function bidsUp(price) {
-    obj = createOrderObj('removeOrder', 0, bids[mmConf.ORDERAMOUNT - 1], 0);
-    mmQue.push(obj);
+    if (trade.orderBook[1][0].price > price) {
+        obj = createOrderObj('removeOrder', 0, bids[mmConf.ORDERAMOUNT - 1], 0);
+        mmQue.push(obj);
 
-    bids.pop();
+        bids.pop();
 
-    obj = createOrderObj('addOrder', 0, price, 0)
-    mmQue.push(obj);
+        obj = createOrderObj('addOrder', 0, price, 0)
+        mmQue.push(obj);
 
-    bids.unshift(price);
+        bids.unshift(price);
+    }
 }
 
 function bidsDown(price) {
