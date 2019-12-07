@@ -61,30 +61,33 @@ export default {
   methods: {
     async withdraw() {
       let currency = $("#withdraw-slider").val() == 0 ? "ETH" : "USD";
-      const res = await auth.withdraw({
-        userId: this.$store.state.user.userId,
-        amount: this.amount,
-        address: this.address,
-        currency
-      });
-      //document.getElementById("msg-ul").innerHTML = "";
-      document.getElementById("msg-ul").style.color = "rgb(255, 196, 196)";
+      if(this.amount > 0){
+        const res = await auth.withdraw({
+          userId: this.$store.state.user.userId,
+          amount: this.amount,
+          address: this.address,
+          currency
+        });
+        //document.getElementById("msg-ul").innerHTML = "";
+        document.getElementById("msg-ul").style.color = "rgb(255, 196, 196)";
 
-      this.messages = res.data.messages;
+        this.messages = res.data.messages;
 
-      if (res.data.success) {
-        document.getElementById("msg-ul").style.color = "rgb(182, 255, 188)";
+        if (res.data.success) {
+          document.getElementById("msg-ul").style.color = "rgb(182, 255, 188)";
 
-        document.getElementById("ethAvailable").innerText =
-          "ETH: " + (res.data.balanceETH - res.data.reservedETH);
-        document.getElementById("usdAvailable").innerText =
-          "USD: " + (res.data.balanceUSD - res.data.reservedUSD);
+          document.getElementById("ethAvailable").innerText =
+            "ETH: " + (res.data.balanceETH - res.data.reservedETH);
+          document.getElementById("usdAvailable").innerText =
+            "USD: " + (res.data.balanceUSD - res.data.reservedUSD);
 
-        document.getElementById("availableFunds-ETH").innerText = `${res.data
-          .balanceETH - res.data.reservedETH} ETH`;
-        document.getElementById("availableFunds-USD").innerText = `${res.data
-          .balanceUSD - res.data.reservedUSD} USD`;
+          document.getElementById("availableFunds-ETH").innerText = `${res.data
+            .balanceETH - res.data.reservedETH} ETH`;
+          document.getElementById("availableFunds-USD").innerText = `${res.data
+            .balanceUSD - res.data.reservedUSD} USD`;
+        }
       }
+      
     }
   },
   async created() {
