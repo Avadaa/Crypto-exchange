@@ -142,7 +142,6 @@ socket.on('removeOrder', async (data) => {
 socket.on('marketOrder', async (data) => {
     document.getElementById('currentPrice').innerText = `${data.currentPrice}`;
     OB = data.OB;
-    console.log(data)
     if (data.id == user.id) {
 
         user.balanceUSD = data.balanceUSD;
