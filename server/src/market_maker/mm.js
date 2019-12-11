@@ -288,6 +288,9 @@ function resetOrders() {
         obj = createOrderObj('removeOrder', 0, bids[0], 1);
         mmQue.push(obj);
     }
+
+    db.query(`UPDATE users SET "reservedUSD" = 0 WHERE "id" = ${mmConf.ID}`);
+    db.query(`UPDATE users SET "reservedETH" = 0 WHERE "id" = ${mmConf.ID}`);
     pushTrade();
     setTimeout(() => {
         fillBooks();
