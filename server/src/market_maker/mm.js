@@ -280,6 +280,21 @@ function checkSpread() {
     }
 }
 
+function resetOrders() {
+    for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
+        let obj = createOrderObj('removeOrder', 0, bids[0], 0);
+        mmQue.push(obj);
+
+        obj = createOrderObj('removeOrder', 0, bids[0], 1);
+        mmQue.push(obj);
+    }
+    pushTrade();
+    setTimeout(() => {
+        fillBooks();
+
+    }, 500);
+}
+
 
 
 // Fetch the current 1min candle opening price every 2s after the last minute has closed
@@ -287,6 +302,7 @@ function checkSpread() {
 
 let minute = 60 * 1000;
 let fiveSeconds = 5 * 1000;
+let hour = 60 * minute;
 const DELAY = 3000 // ms
 function get1mOpen() {
     setTimeout(() => {
@@ -310,6 +326,7 @@ function repeatEvery(func, interval) {
 }
 repeatEvery(get1mOpen, minute)
 repeatEvery(checkSpread, fiveSeconds)
+repeatEvery(resetOrders, hour)
 
 
 // Just linking the bidAbsorb and askAbsorb didn't work
