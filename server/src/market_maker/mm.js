@@ -282,20 +282,29 @@ function checkSpread() {
 
 function resetOrders() {
     for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
-        let obj = createOrderObj('removeOrder', 0, bids[0], 0);
+        mmQue.push(createOrderObj('changeOrder', 0, bids[i], 0));
         mmQue.push(obj);
 
-        obj = createOrderObj('removeOrder', 0, bids[0], 1);
+        mmQue.push(createOrderObj('changeOrder', 0, asks[i], 1));
         mmQue.push(obj);
     }
 
-    db.query(`UPDATE users SET "reservedUSD" = 0 WHERE "id" = ${mmConf.ID}`);
-    db.query(`UPDATE users SET "reservedETH" = 0 WHERE "id" = ${mmConf.ID}`);
+    setTimeout(() => {
+        db.query(`UPDATE users SET "reservedUSD" = 0 WHERE "id" = ${mmConf.ID}`);
+        db.query(`UPDATE users SET "reservedETH" = 0 WHERE "id" = ${mmConf.ID}`);
+    }, 500);
+
     pushTrade();
     setTimeout(() => {
-        fillBooks();
+        for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
+            mmQue.push(createOrderObj('changeOrder', round((i + 1) * mmConf.FIRSTAMOUNT), bids[i], 0));
+            mmQue.push(obj);
 
-    }, 500);
+            mmQue.push(createOrderObj('changeOrder', round((mmConf.ORDERAMOUNT - i) * mmConf.FIRSTAMOUNT), asks[i], 1));
+            mmQue.push(obj);
+        }
+
+    }, 1000);
 }
 
 
