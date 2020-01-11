@@ -50,7 +50,6 @@ module.exports = {
 
                 console.log('User ' + userId + '    ' + req.body.username + ' has registered');
 
-
                 res.send({
                     user,
                     token: jwtSignUser(user),

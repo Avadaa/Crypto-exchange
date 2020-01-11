@@ -50,8 +50,6 @@ module.exports = {
             balance = res / 1000000;
         })
         return balance;
-
-
     },
 
     sendCustomAddressUSD: async (userId, toAddress, amount) => {
@@ -221,11 +219,9 @@ module.exports = {
                     }
 
                 })
-
         }
 
     },
-
 
 
     sendCustomAddressETH: async (userId, toAddress, amount) => {
@@ -284,7 +280,6 @@ module.exports = {
                     }
 
                 })
-
         }
         else
             return 'You can request a withdrawal every two minutes. Please wait before sending a new request.';
@@ -344,8 +339,6 @@ module.exports = {
                         return error;
                     }
                 })
-
-
         }
     }
 };

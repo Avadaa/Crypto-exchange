@@ -114,8 +114,6 @@ async function addOrder(data) {
 
 
     if (userHasBalance) {
-
-
         //--------------------------------2-------------------------------- 
         // Add a new entry to the server-side order book
         orderBook[orderType].splice(index, 0, OBobject);
@@ -349,7 +347,6 @@ async function marketOrder(data) {
             await marketUpdateUser(limitAddBalanceSide, limitAddChange, OBrow.id, '+')
 
 
-
             let marketSide = await db.query(`SELECT * FROM users WHERE "id" = ${data.user.id}`);
             marketSide = marketSide[0];
             let limitSide = await db.query(`SELECT * FROM users WHERE "id" = ${OBrow.id}`);
@@ -365,7 +362,6 @@ async function marketOrder(data) {
                 let makerHistoryQuery = `UPDATE history SET "filled" = ${amountFilled}, "status" = '${orderStatus}' WHERE "id" = ${OBrow.orderId}`
                 await db.query(makerHistoryQuery);
             }
-
 
             // Add an entry for the taker-side history user in db
             let buySell = null;
@@ -404,7 +400,6 @@ async function marketOrder(data) {
                     }
                 }
             }
-
 
             currentPrice = OBrow.price;
 

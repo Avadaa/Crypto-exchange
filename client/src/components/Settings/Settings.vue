@@ -146,7 +146,7 @@ export default {
         document.getElementById("avatar-img").src = file[0].dataURL;
       }
     },
-    // Toggling between tabs on settings menu
+    // Toggling between tabs on settings menu (a little messy, I know)
     async toggleTabs() {
       if ($("#avatar").css("display") == "block") {
         $("#avatar").css("display", "none");
@@ -240,6 +240,7 @@ export default {
         $("#twoFaInfoEnabled").css("display", "flex");
       }
     },
+
     async twoFaDisable() {
       let result = await auth.checkTwoFa({
         userId: this.$store.state.user.userId,
@@ -263,6 +264,8 @@ export default {
       });
       $("#twoFaScanQR").attr("src", qrData.data);
     },
+
+    // Clears the two factor auth input from numbers
     clearFa() {
       $("#twoFaError").css("display", "none");
       $("#twoFaDiv input").val("");

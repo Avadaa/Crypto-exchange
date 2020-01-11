@@ -23,15 +23,6 @@ module.exports = {
 };
 
 
-
-
-
-// Setting up db
-const db = require('knex')(require('../config/database'));
-
-// Session
-const session = require('express-session');
-
 // Set Body Parser ready for use
 let bodyParser = require('body-parser');
 app.use(bodyParser.json({ limit: '50mb', extended: true }));

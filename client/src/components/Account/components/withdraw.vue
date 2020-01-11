@@ -61,14 +61,13 @@ export default {
   methods: {
     async withdraw() {
       let currency = $("#withdraw-slider").val() == 0 ? "ETH" : "USD";
-      if(this.amount > 0){
+      if (this.amount > 0) {
         const res = await auth.withdraw({
           userId: this.$store.state.user.userId,
           amount: this.amount,
           address: this.address,
           currency
         });
-        //document.getElementById("msg-ul").innerHTML = "";
         document.getElementById("msg-ul").style.color = "rgb(255, 196, 196)";
 
         this.messages = res.data.messages;
@@ -87,9 +86,9 @@ export default {
             .balanceUSD - res.data.reservedUSD} USD`;
         }
       }
-      
     }
   },
+  // Fetch and display the user's withdraw history
   async created() {
     const withdrawHistory = await auth.withdrawHistory({
       userId: this.$store.state.user.userId

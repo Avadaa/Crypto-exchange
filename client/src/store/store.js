@@ -32,16 +32,13 @@ export default new Vuex.Store({
 
     },
     actions: {
-        // Store token information to browser storage and to state variable
         setToken({ commit }, token) {
             localStorage.setItem('token', token);
             commit('setToken', token);
         },
-        // Load token from browser storage to state variable
         getLocalToken({ commit }) {
             commit('setToken', localStorage.getItem('token'));
         },
-        // Store user information to browser storage and to state variable
         setUser({ commit }, User) {
             localStorage.setItem('userId', User.userId);
             localStorage.setItem('username', User.username);
@@ -49,7 +46,6 @@ export default new Vuex.Store({
 
             commit('setUser', User);
         },
-        // Fetch user information from browser's storage and store it to state variable
         getLocalUser({ commit }) {
             let localStorageUser = {
                 username: localStorage.getItem('username'),
@@ -60,7 +56,6 @@ export default new Vuex.Store({
         }
     },
     getters: {
-        // Get logged state
         isUserLoggedIn: (state) => {
             return state.isUserLoggedIn;
         }

@@ -57,6 +57,7 @@ function updateIndex() {
     trade.io.emit('updateIndex', ({ index }))
 }
 
+// Does all the preliminary work before moving mm's orders up a notch
 function moveUp() {
 
     // Buying other traders' limit asks
@@ -93,6 +94,7 @@ function moveUp() {
     }
 }
 
+// Does all the preliminary work before moving mm's orders down a notch
 function moveDown() {
 
     // Market selling into other users' bids
@@ -129,6 +131,7 @@ function moveDown() {
     }
 }
 
+// If a large amount (can be set in conf) is bought into mm's orders, raise the spread for a short period of time
 async function absorbUp() {
     askAbsorb = 0;
 
@@ -158,6 +161,7 @@ async function absorbUp() {
     }
 }
 
+// If a large amount (can be set in conf) is sold into mm's orders, raise the spread for a short period of time
 async function absorbDown() {
     bidAbsorb = 0;
 
@@ -186,7 +190,14 @@ async function absorbDown() {
     }
 }
 
-
+// Swap the books' weight
+// before:
+//   [asks] index [bids]
+//   10 8 6 currentPrice 10 8 6
+//
+// after:
+//   [asks] index [bids]
+//   6 8 10 currentPRice 6 8 10
 function weighBooks() {
     if (currentHeavy == 'bid') {
         for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
@@ -195,7 +206,6 @@ function weighBooks() {
         }
         currentHeavy = 'ask';
     }
-
 
     else if (currentHeavy == 'ask') {
         for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
@@ -209,8 +219,6 @@ function weighBooks() {
 }
 
 
-
-
 function fillBooks() {
 
     fillSide('bids')
@@ -219,6 +227,7 @@ function fillBooks() {
     pushTrade();
 }
 
+// Fill the books when starting the server
 function fillSide(side) {
     for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
 
@@ -242,11 +251,6 @@ function fillSide(side) {
     }
 }
 
-//addOder
-//marketOrder
-//removeOrder
-//task, price, side('ask'), user
-
 function createOrderObj(task, amount, price, orderType) {
     return {
         task,
@@ -266,6 +270,7 @@ function round(num) {
 }
 
 
+// Checks if the spread is acceptable. If not, lower it little by little
 function checkSpread() {
     let spread = asks[0] - bids[0];
     if (spread > mmConf.REALSPREAD) {
@@ -279,6 +284,7 @@ function checkSpread() {
         weighBooks();
     }
 }
+
 
 function resetOrders() {
     for (let i = 0; i < mmConf.ORDERAMOUNT; i++) {
@@ -310,8 +316,7 @@ function resetOrders() {
 
 
 // Fetch the current 1min candle opening price every 2s after the last minute has closed
-// The delay to allows the ping to be 2000ms at max. Can be changed if needed.
-
+// The delay to allows the ping to the server to be 3000ms at max. Can be changed if needed.
 let minute = 60 * 1000;
 let fiveSeconds = 5 * 1000;
 let hour = 60 * minute;
@@ -400,6 +405,7 @@ module.exports = {
     absorbUp
 }
 
+// Moving the orders up or down
 function asksUp(price) {
     let obj = createOrderObj('removeOrder', 0, asks[0], 1);
     mmQue.push(obj);

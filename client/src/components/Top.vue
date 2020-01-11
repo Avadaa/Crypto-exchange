@@ -78,6 +78,7 @@ export default {
 
       this.$router.push("/");
     },
+    // Open and close settings
     openNclose() {
       if (
         ($(event.target).is("#settings") &&

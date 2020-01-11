@@ -20,7 +20,7 @@ socket.on('transmitOB', (data) => {
 });
 
 // Initiated order
-// Decided whether we're emiting an 'add order', 'market order', or maybe both with appropriate amounts
+// Decides whether we're emitting an 'add order', 'market order', or maybe both with appropriate amounts
 export function order(action, amount, price, market) {
 
     amount = round(amount);
@@ -331,20 +331,22 @@ function matchingPrices(side, price) {
 // All the prices that apply, get an x-button to make it possible to remove those orders
 export function findOwnOrders() {
     let prices = [[], []];
-    for (let i = 0; i < 2; i++)
-        for (let j = 0; j < OB[i].length; j++)
-            if (OB && user && OB[i][j].id == user.id && !prices[i].includes(OB[i][j].price))
-                prices[i].push(OB[i][j].price);
+    if (OB && user) {
+        for (let i = 0; i < 2; i++)
+            for (let j = 0; j < OB[i].length; j++)
+                if (OB && user && OB[i][j].id == user.id && !prices[i].includes(OB[i][j].price))
+                    prices[i].push(OB[i][j].price);
 
-    let bookEles = [$($('#bid').children()[0]).children(), $($('#ask').children()[0]).children()]
+        let bookEles = [$($('#bid').children()[0]).children(), $($('#ask').children()[0]).children()]
 
-    for (let i = 0; i < 2; i++)
-        for (let j = 1; j < bookEles[i].length; j++) {
+        for (let i = 0; i < 2; i++)
+            for (let j = 1; j < bookEles[i].length; j++) {
 
-            let price = Number($(bookEles[i][j]).children()[0].innerText);
-            if (prices[i].includes(price))
-                $($(bookEles[i][j]).children()[2]).removeClass('order-remove-invisible').addClass('order-remove-visible');
-        }
+                let price = Number($(bookEles[i][j]).children()[0].innerText);
+                if (prices[i].includes(price))
+                    $($(bookEles[i][j]).children()[2]).removeClass('order-remove-invisible').addClass('order-remove-visible');
+            }
+    }
 }
 
 export async function receiveUserInfo(data) {

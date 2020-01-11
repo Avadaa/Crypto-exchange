@@ -218,6 +218,7 @@ module.exports = {
             }
         })
     },
+    // Checks user's jwt token's authenticity
     async checkToken(req, res) {
         try {
             jwt.verify(req.body.token, cookiesConf.secret, (err, data) => {
@@ -239,6 +240,7 @@ module.exports = {
         }
 
     },
+    // Checks if user has enabled twofa
     async twoFaState(req, res) {
         let twoFaQuery = `SELECT "twofaenabled" FROM users WHERE id = ${req.body.userId}`
         let enabled = await db.query(twoFaQuery);
@@ -255,6 +257,7 @@ module.exports = {
             res.send(img)
         })
     },
+    // Checks user's input on twofa
     async checkTwoFa(req, res) {
         let secretQuery = `SELECT "twofasecret" FROM users WHERE id = ${req.body.userId}`
         let secret = await db.query(secretQuery);

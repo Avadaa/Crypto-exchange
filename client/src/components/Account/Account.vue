@@ -25,6 +25,7 @@ export default {
     return {};
   },
   methods: {
+    // Logic for self made tabs
     toggleTabs() {
       if (!event.target.classList.contains("active")) {
         document.getElementById("depositTab").classList.toggle("active");

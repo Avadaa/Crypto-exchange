@@ -55,14 +55,10 @@ module.exports = {
                         errors: ['Incorrect credentials']
                     });
 
-
                 else {
                     if (err) throw err;
 
                     else {
-
-
-
                         let userInfoQuery = `SELECT * FROM users WHERE id = '${dbRes[0].id}'`;
                         let userInfo = await db.query(userInfoQuery);
 
@@ -89,7 +85,6 @@ module.exports = {
                 }
             });
         }
-
 
         if (errorMsg.length > 0)
             res.status(200).send({
