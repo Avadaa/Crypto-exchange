@@ -4,6 +4,8 @@ http://www.ezgainsonline.com/#/
 
 Pictures: https://imgur.com/a/k354i9C
 
+Socket.io might have some problems connecting if the client using a sock5 proxy.
+
 A site which works a lot like a stock exchange. Users can deposit money and trade using those funds. Everything works with real world currency (crypto: Ethereum and Tether). The project was made for educational purposes only, and is not meant for actual trading. Stuff I learned:
 
 - Web application file structure
