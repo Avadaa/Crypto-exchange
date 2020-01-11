@@ -11,6 +11,7 @@ A site which works a lot like a stock exchange. Users can deposit money and trad
 - Web application file structure
 - Vue
 - Socket.io
+- Databases in web development
 - Basics of writing a trading engine from scratch
 - Basics of coding an API
 - Two factor authentication
