@@ -155,7 +155,7 @@ export default {
   async mounted() {
     const obInfo = await auth.obInfo();
     this.orderBook = obInfo.data.OBcompressed;
-    this.orderBook[1] = this.orderBook[1].reverse(); // So it renders in the right order
+    this.orderBook[1] = this.orderBook[1].reverse(); // To render in the right order
 
     document.getElementById("currentPrice").innerText =
       obInfo.data.currentPrice;
