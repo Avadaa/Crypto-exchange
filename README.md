@@ -1,4 +1,4 @@
-# Crypto-exchange
+# Cryptocurrency exchange
 
 http://www.ezgainsonline.com/#/
 
