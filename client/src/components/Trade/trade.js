@@ -165,15 +165,20 @@ socket.on('changeOrder', (data) => {
     OB = data.OB
     let rows = $($(`#${data.emitType}`).children()[0]).children()
 
+    // Loop through the visible order book
     for (let i = 1; i < rows.length; i++) {
         let rowPrice = $(rows[i]).children()[0].innerText;
 
         if (rowPrice == data.price) {
             let current = Number($(rows[i]).children()[1].innerText);
 
-            if (user && data && user.id == data.userID)
-                document.getElementById('ethAvailable').innerText = `ETH: ${round(Number(document.getElementById('ethAvailable').innerText) + round(data.change))}`
+            // Modifying orders is not supported for other clients than the market maker (algorithm), so 
+            //    displaying the changes in the client-side is not needed
+          
+            //if (user && data && user.id == data.userID)
+            //    document.getElementById('ethAvailable').innerText = `ETH: ${round(Number(document.getElementById('ethAvailable').innerText) + round(data.change))}`
 
+            // Change the values which are no longer valid after some orders have been modified
             current = round(round(current) + round(data.change));
             $(rows[i]).children()[1].innerText = round(current);
             //validateBooks()
@@ -231,7 +236,7 @@ function redrawBooks() {
 }
 */
 
-// Add new entry on local history
+// Add new entry to local history
 socket.on('historyInfo', (data) => {
     data.amount = round(data.amount);
     if (data.amount > 0) {
@@ -262,7 +267,7 @@ socket.on('historyInfo', (data) => {
 function limitAsMarket(amount, price, orderType) {
     let OBside = orderType == 0 ? 1 : 0;
 
-    let amountBetween = 0;
+    let amountBetween = 0; // How big the market-order is going to be
     let marketPrice = price;
 
     for (let i = 0; i < OB[OBside].length; i++) {
