@@ -1,6 +1,6 @@
 # Cryptocurrency exchange
 
-http://www.ezgainsonline.com/#/
+http://www.ezgainsonline.com/#/ (disabled)
 
 Pictures: https://imgur.com/a/k354i9C
 
